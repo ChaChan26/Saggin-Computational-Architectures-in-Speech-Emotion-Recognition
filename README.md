@@ -1,4 +1,4 @@
-# Speech Emotion Recognition (SER) Pipeline 🎙️🤖
+# Speech Emotion Recognition (SER) Pipeline 
 
 This repository implements a high-performance, GPU-accelerated **Speech Emotion Recognition (SER)** machine learning pipeline. It classifies acoustic feature vectors extracted from audio recordings into one of 6 target emotional states: **anger, disgust, fear, happy, neutral, and sad**.
 
@@ -43,7 +43,7 @@ The dataset contains **54,485 audio samples** with **48 acoustic features** extr
 
 ---
 
-## 🧠 Blending Weights & Soft-Voting Mathematics
+##  Blending Weights & Soft-Voting Mathematics
 
 The high accuracy of the final ensemble model (**`0.8719` Test F1-Score**) is achieved using a **Weighted Soft-Voting Ensemble** optimized via **Out-of-Fold (OOF)** cross-validation.
 
