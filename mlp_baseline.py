@@ -56,9 +56,10 @@ def main():
     
     # Path configuration
     base_dir = os.path.dirname(os.path.abspath(__file__))
-    csv_path = os.path.join(base_dir, "dataset", "all_emotions.csv")
-    csv_path = os.path.normpath(csv_path)
-    
+    csv_path = os.path.normpath(os.path.join(base_dir, "dataset", "all_emotions.csv"))
+    if not os.path.exists(csv_path):
+        csv_path = os.path.normpath(os.path.join(base_dir, "all_emotions.csv"))
+        
     if not os.path.exists(csv_path):
         raise FileNotFoundError(f"Dataset not found at {csv_path}. Please check your folder structure.")
         
