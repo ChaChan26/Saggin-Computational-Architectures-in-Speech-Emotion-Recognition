@@ -9,37 +9,10 @@ import lightgbm as lgb
 from sklearn.metrics import classification_report, cohen_kappa_score, confusion_matrix, f1_score
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder, StandardScaler
+import torch
 
-
+CUDA_AVAILABLE = torch.cuda.is_available()
 RANDOM_STATE = 42
-FEATURE_COLS = [
-    "F0_mean",
-    "F0_std",
-    "F0_range",
-    "Energy_ mean",
-    "Energy_ std",
-    "ZCR_mean",
-    "ZCR_std",
-    "Spectral_centroid_mean",
-    "Spectral_centroid_std",
-    "Spectral_flux_mean",
-    "MFCC_C0_mean",
-    "MFCC_C1_mean",
-    "MFCC_C2_mean",
-    "MFCC_C3_mean",
-    "MFCC_C5_mean",
-    "MFCC_C7_mean",
-    "MFCC_C10_mean",
-    "MFCC_C0_std",
-    "MFCC_C1_std",
-    "MFCC_C2_std",
-    "MFCC_C3_std",
-    "MFCC_C5_std",
-    "MFCC_C7_std",
-    "Delta_MFCC_C0_std",
-    "Delta_MFCC_C2_std",
-    "Delta_MFCC_C3_std",
-]
 
 
 def resolve_csv_path(base_dir: str) -> str:
@@ -57,7 +30,7 @@ def resolve_csv_path(base_dir: str) -> str:
     )
 
 
-def load_data(csv_path: str) -> tuple[pd.DataFrame, str]:
+def load_data(csv_path: str) -> tuple[pd.DataFrame, str, list[str]]:
     df = pd.read_csv(csv_path)
     target_col = "label"
     if target_col not in df.columns and "Label" in df.columns:
@@ -66,7 +39,10 @@ def load_data(csv_path: str) -> tuple[pd.DataFrame, str]:
     df_cleaned = df.dropna(subset=[target_col]).copy()
     df_cleaned = df_cleaned[df_cleaned[target_col].astype(str).str.strip().str.lower() != "nan"]
 
-    for col in FEATURE_COLS:
+    # Use all columns except target as features
+    feature_cols = [col for col in df_cleaned.columns if col not in [target_col]]
+
+    for col in feature_cols:
         s = pd.to_numeric(df_cleaned[col], errors="coerce")
         s = s.replace([np.inf, -np.inf], np.nan)
         med = s.median()
@@ -74,7 +50,8 @@ def load_data(csv_path: str) -> tuple[pd.DataFrame, str]:
             med = 0.0
         df_cleaned[col] = s.fillna(med)
 
-    return df_cleaned, target_col
+    return df_cleaned, target_col, feature_cols
+
 
 
 def build_models(num_classes: int):
@@ -90,6 +67,7 @@ def build_models(num_classes: int):
         eval_metric="mlogloss",
         objective="multi:softprob",
         num_class=num_classes,
+        device="cuda" if CUDA_AVAILABLE else "cpu",
     )
 
     lgb_model = lgb.LGBMClassifier(
@@ -104,6 +82,7 @@ def build_models(num_classes: int):
         verbose=-1,
         objective="multiclass",
         num_class=num_classes,
+        device="gpu" if CUDA_AVAILABLE else "cpu",
     )
 
     return xgb_model, lgb_model
@@ -167,8 +146,8 @@ def main() -> None:
     print(f"Loading dataset from: {csv_path}")
     figures_dir = ensure_figures_dir(base_dir)
 
-    df_cleaned, target_col = load_data(csv_path)
-    X = df_cleaned[FEATURE_COLS].values
+    df_cleaned, target_col, feature_cols = load_data(csv_path)
+    X = df_cleaned[feature_cols].values
     y = df_cleaned[target_col].astype(str).str.strip().values
 
     encoder = LabelEncoder()
