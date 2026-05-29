@@ -16,7 +16,9 @@ Nigga1-main/
 ├── visualize_data.ipynb          # Exploratory Data Analysis (EDA) & class plots
 ├── random_forest.ipynb           # Baseline Random Forest model, tuning, & evaluation
 ├── advanced_ml_models.ipynb      # Advanced modeling (XGBoost, LightGBM, SVM)
+├── ensemble_advanced.ipynb       # Weighted XGBoost + LightGBM ensemble with visualizations
 ├── mlp_baseline.py               # Deep Learning (PyTorch MLP) baseline classifier
+├── all_emotions.csv              # Feature dataset (54,485 audio samples)
 └── requirements.txt              # Standard project dependencies
 ```
 
@@ -47,6 +49,22 @@ On an unseen test set of **10,897 samples**, the optimized Random Forest baselin
 *   **Weighted F1-Score:** `0.8320` (83.2%)
 *   **Cohen's Kappa:** `0.7974` (Strong agreement)
 
+This is the **best-documented baseline** in the repository. The MLP script is included as a neural-network baseline, but its results are not reported in the README.
+
+## 📈 Model Performance (Advanced Models)
+
+The advanced notebook compares **XGBoost**, **LightGBM**, and **SVM** with Optuna tuning:
+
+*   **Validation F1:** `0.8421`
+*   **Test Weighted F1:** `0.8506`
+*   **Test Cohen's Kappa:** `0.8201`
+
+For reference:
+*   **XGBoost Validation F1:** `0.8335`
+*   **SVM Validation F1:** `0.7219`
+
+This is the strongest single-model result currently reported in the project. A weighted **XGBoost + LightGBM ensemble** with detailed visualizations is provided in `ensemble_advanced.ipynb`.
+
 ### Class Breakdown (F1-Scores)
 *   **Anger:** `0.91` *(Easiest to classify)*
 *   **Sad:** `0.85`
@@ -70,6 +88,7 @@ On an unseen test set of **10,897 samples**, the optimized Random Forest baselin
    ```bash
    python mlp_baseline.py
    ```
+   Note: `mlp_baseline.py` currently expects `all_emotions.csv` under `dataset/`. The file in this repo is stored at the project root, so either move it or update the script path before running.
 
 3. **Explore Jupyter Notebooks:**
    Open the notebook environment to execute baseline and boosting models:
