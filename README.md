@@ -42,6 +42,7 @@ Speech-Emotion-Recognition/
 │   ├── ser_ensemble_scaler.joblib
 │   ├── ser_lgb_model.joblib
 │   ├── ser_meta_model.joblib
+│   ├── ser_mlp_model.joblib
 │   ├── ser_optuna_encoder.joblib
 │   ├── ser_optuna_lightgbm.joblib
 │   ├── ser_optuna_scaler.joblib
