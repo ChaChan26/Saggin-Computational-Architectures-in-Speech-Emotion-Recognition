@@ -14,18 +14,16 @@ Speech-Emotion-Recognition/
 │
 ├── figures/                      # Generated performance plots (Confusion matrices, comparisons)
 │
-├── notebooks/                    # Exploratory & backup Jupyter Notebooks
-│   ├── checking_csvfile.ipynb
-│   ├── visualize_data.ipynb
-│   ├── random_forest.ipynb
-│   ├── advanced_ml_models.ipynb
-│   ├── ensemble_advanced.ipynb
-│   ├── production_ensemble_pipeline.ipynb
-│   ├── production_ensemble_pipeline_fixed.ipynb
-│   ├── production_optuna_pipeline.ipynb
-│   ├── train_final_ensemble.ipynb
-│   └── train_stacking_ensemble.ipynb
-│
+├── checking_csvfile.ipynb        # Data inspection & cleaning
+├── visualize_data.ipynb          # Exploratory Data Analysis (EDA) & class plots
+├── random_forest.ipynb           # Baseline Random Forest model, tuning, & evaluation
+├── advanced_ml_models.ipynb      # Advanced modeling (XGBoost, LightGBM, SVM)
+├── ensemble_advanced.ipynb       # Weighted XGBoost + LightGBM ensemble with visualizations
+├── production_ensemble_pipeline.ipynb # Base ensemble pipeline notebook
+├── production_ensemble_pipeline_fixed.ipynb # Updated ensemble pipeline notebook
+├── production_optuna_pipeline.ipynb # Optuna tuning notebook
+├── train_final_ensemble.ipynb    # Soft-voting ensemble training notebook
+├── train_stacking_ensemble.ipynb # Stacking ensemble training notebook
 ├── tune_pipeline.py              # Hyperparameter tuning script via Optuna
 ├── train_lightgbm.py             # Single LightGBM model training script
 ├── train_final_ensemble.py       # Optimally weighted ensemble training script
