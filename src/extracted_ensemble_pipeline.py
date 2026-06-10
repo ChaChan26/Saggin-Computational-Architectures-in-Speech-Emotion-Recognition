@@ -81,8 +81,8 @@ LGB_VAL_F1 = 0.842069322599305
 # Dataset Loading
 # ============================================================
 # Resolve dataset path (prefer dataset/all_emotions.csv, fall back to root)
-_base = os.path.dirname(os.path.abspath(__file__))
-_project_root = os.path.dirname(_base) if os.path.basename(_base).lower() == "src" else _base
+_base = os.path.dirname(os.path.abspath(__file__)) if "__file__" in globals() else os.getcwd()
+_project_root = os.path.dirname(_base) if os.path.basename(_base).lower() in ["src", "notebooks"] else _base
 ALL_EMOTIONS_CSV = os.path.normpath(os.path.join(_project_root, "dataset", "all_emotions.csv"))
 
 if not os.path.isfile(ALL_EMOTIONS_CSV):

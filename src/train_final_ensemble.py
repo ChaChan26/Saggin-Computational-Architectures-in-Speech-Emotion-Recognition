@@ -63,7 +63,7 @@ def load_data(csv_path: str) -> tuple[pd.DataFrame, str, list[str]]:
 
 
 def load_best_params(base_dir: str) -> dict[str, dict[str, Any]]:
-    project_root = base_dir if os.path.basename(base_dir) != "src" else os.path.dirname(base_dir)
+    project_root = os.path.dirname(base_dir) if os.path.basename(base_dir).lower() in ["src", "notebooks"] else base_dir
     params_path = os.path.join(project_root, "best_params.json")
     if os.path.isfile(params_path):
         with open(params_path, "r") as f:
@@ -160,7 +160,7 @@ def optimize_ensemble_weights(
 
 
 def ensure_figures_dir(base_dir: str) -> str:
-    project_root = base_dir if os.path.basename(base_dir) != "src" else os.path.dirname(base_dir)
+    project_root = os.path.dirname(base_dir) if os.path.basename(base_dir).lower() in ["src", "notebooks"] else base_dir
     figures_dir = os.path.join(project_root, "figures")
     os.makedirs(figures_dir, exist_ok=True)
     return figures_dir
@@ -213,7 +213,7 @@ def plot_class_f1(report_dict, labels, save_path):
 
 
 def main() -> None:
-    base_dir = os.path.dirname(os.path.abspath(__file__))
+    base_dir = os.path.dirname(os.path.abspath(__file__)) if "__file__" in globals() else os.getcwd()
     csv_path = resolve_csv_path(base_dir)
     print(f"Loading dataset from: {csv_path}")
     figures_dir = ensure_figures_dir(base_dir)

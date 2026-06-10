@@ -55,8 +55,8 @@ def main():
     print(f"Using device: {device}")
     
     # Path configuration
-    base_dir = os.path.dirname(os.path.abspath(__file__))
-    project_root = base_dir if os.path.basename(base_dir) != "src" else os.path.dirname(base_dir)
+    base_dir = os.path.dirname(os.path.abspath(__file__)) if "__file__" in globals() else os.getcwd()
+    project_root = os.path.dirname(base_dir) if os.path.basename(base_dir).lower() in ["src", "notebooks"] else base_dir
     csv_path = os.path.normpath(os.path.join(project_root, "dataset", "all_emotions.csv"))
     if not os.path.exists(csv_path):
         csv_path = os.path.normpath(os.path.join(project_root, "all_emotions.csv"))

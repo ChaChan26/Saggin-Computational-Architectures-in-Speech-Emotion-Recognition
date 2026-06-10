@@ -10,8 +10,8 @@ from sklearn.metrics import classification_report, confusion_matrix
 
 def main():
     # 1. Production Pathing: Locate dataset relative to the script location
-    script_dir = os.path.dirname(os.path.abspath(__file__))
-    project_root = script_dir if os.path.basename(script_dir) != "src" else os.path.dirname(script_dir)
+    script_dir = os.path.dirname(os.path.abspath(__file__)) if "__file__" in globals() else os.getcwd()
+    project_root = os.path.dirname(script_dir) if os.path.basename(script_dir).lower() in ["src", "notebooks"] else script_dir
     data_path = os.path.join(project_root, 'dataset', 'all_emotions.csv')
     
     if not os.path.exists(data_path):

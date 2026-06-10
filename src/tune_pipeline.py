@@ -143,7 +143,7 @@ def objective_cb(trial: optuna.Trial, X_train: np.ndarray, y_train: np.ndarray, 
 
 
 def main() -> None:
-    base_dir = os.path.dirname(os.path.abspath(__file__))
+    base_dir = os.path.dirname(os.path.abspath(__file__)) if "__file__" in globals() else os.getcwd()
     csv_path = resolve_csv_path(base_dir)
     
     df_cleaned, target_col, feature_cols = load_data(csv_path)
@@ -202,7 +202,7 @@ def main() -> None:
     print(f"Best CatBoost Mean CV F1: {study_cb.best_value:.4f}")
     best_params["catboost"] = study_cb.best_params
 
-    project_root = base_dir if os.path.basename(base_dir) != "src" else os.path.dirname(base_dir)
+    project_root = os.path.dirname(base_dir) if os.path.basename(base_dir).lower() in ["src", "notebooks"] else base_dir
     out_path = os.path.join(project_root, "best_params.json")
     with open(out_path, "w") as f:
         json.dump(best_params, f, indent=4)
