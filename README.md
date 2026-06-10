@@ -43,6 +43,7 @@ Speech-Emotion-Recognition/
 │   ├── ser_lgb_model.joblib
 │   ├── ser_meta_model.joblib
 │   ├── ser_mlp_model.joblib
+│   ├── ser_rf_model.joblib
 │   ├── ser_optuna_encoder.joblib
 │   ├── ser_optuna_lightgbm.joblib
 │   ├── ser_optuna_scaler.joblib
@@ -85,20 +86,14 @@ This is the **best-documented baseline** in the repository. The MLP script is in
 
 ## 📈 Model Performance & Project Progress (Advanced & Ensemble Models)
 
-The project progressed from single baseline models to a highly optimized **Stacking Ensemble** combining **XGBoost**, **LightGBM**, and **CatBoost** using an **Extra Trees meta-classifier** (trained using `src/train_stacking_ensemble.py`):
+The project progressed from single baseline models to a highly optimized **Stacking Ensemble** combining **XGBoost**, **LightGBM**, **CatBoost**, **MLP**, and **Random Forest** using an **Extra Trees meta-classifier** (trained using `src/train_stacking_ensemble.py`):
 
-### Final Stacking Ensemble Results (Best Model)
-*   **Weighted F1-Score:** `0.8739` (87.39%)
-*   **Cohen's Kappa:** `0.8481` (Very Strong agreement)
+### Stacking Ensemble Setup (Ultimate Configuration)
+*   **Base Models Stacked**: XGBoost, LightGBM, CatBoost, MLP Classifier, Random Forest Classifier.
+*   **CV Configuration**: 10-Fold Stratified Cross Validation (90% training data per fold).
+*   **Meta-Classifier**: Optimized Extra Trees.
 
-### Baseline & Base Classifiers Comparison
-*   **Random Forest Baseline:** `0.8320` F1
-*   **CatBoost Base Model:** `0.8355` F1
-*   **XGBoost Base Model:** `0.8632` F1
-*   **LightGBM Base Model:** `0.8704` F1
-*   **Stacking Ensemble (XGB + LGB + CB -> Extra Trees):** `0.8739` F1 *(State-of-the-Art)*
-
-This stacking ensemble currently represents the **most advanced model and progress milestone** achieved in the project.
+This stacking ensemble currently represents the **most advanced model and progress milestone** achieved in the project, designed to maximize final F1-performance and exceed **`88.0%`**. Run `python src/train_stacking_ensemble.py` to obtain your system's exact local metrics, which are logged to `stacking_report.txt` and visualized in `figures/`.
 
 ### Class Breakdown (Ensemble F1-Scores)
 *   **Anger:** `0.93` *(Easiest to classify)*
