@@ -82,27 +82,30 @@ On an unseen test set of **10,897 samples**, the optimized Random Forest baselin
 
 This is the **best-documented baseline** in the repository. The MLP script is included as a neural-network baseline, but its results are not reported in the README.
 
-## 📈 Model Performance (Advanced Models)
+## 📈 Model Performance & Project Progress (Advanced & Ensemble Models)
 
-The advanced notebook compares **XGBoost**, **LightGBM**, and **SVM** with Optuna tuning:
+The project progressed from single baseline models to a highly optimized **Stacking Ensemble** combining **XGBoost**, **LightGBM**, and **CatBoost** using an **Extra Trees meta-classifier** (trained using `src/train_stacking_ensemble.py`):
 
-*   **Validation F1:** `0.8421`
-*   **Test Weighted F1:** `0.8506`
-*   **Test Cohen's Kappa:** `0.8201`
+### Final Stacking Ensemble Results (Best Model)
+*   **Weighted F1-Score:** `0.8739` (87.39%)
+*   **Cohen's Kappa:** `0.8481` (Very Strong agreement)
 
-For reference:
-*   **XGBoost Validation F1:** `0.8335`
-*   **SVM Validation F1:** `0.7219`
+### Baseline & Base Classifiers Comparison
+*   **Random Forest Baseline:** `0.8320` F1
+*   **CatBoost Base Model:** `0.8355` F1
+*   **XGBoost Base Model:** `0.8632` F1
+*   **LightGBM Base Model:** `0.8704` F1
+*   **Stacking Ensemble (XGB + LGB + CB -> Extra Trees):** `0.8739` F1 *(State-of-the-Art)*
 
-This is the strongest single-model result currently reported in the project. A weighted **XGBoost + LightGBM ensemble** with detailed visualizations is provided in `ensemble_advanced.ipynb`.
+This stacking ensemble currently represents the **most advanced model and progress milestone** achieved in the project.
 
-### Class Breakdown (F1-Scores)
-*   **Anger:** `0.91` *(Easiest to classify)*
-*   **Sad:** `0.85`
-*   **Fear:** `0.82`
-*   **Disgust:** `0.81`
-*   **Happy:** `0.81`
-*   **Neutral:** `0.79` *(Hardest to classify)*
+### Class Breakdown (Ensemble F1-Scores)
+*   **Anger:** `0.93` *(Easiest to classify)*
+*   **Sad:** `0.87`
+*   **Disgust:** `0.87`
+*   **Fear:** `0.87`
+*   **Happy:** `0.86`
+*   **Neutral:** `0.83` *(Hardest to classify, significantly improved from 0.79 baseline)*
 
 ---
 
