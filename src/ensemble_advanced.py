@@ -16,17 +16,18 @@ RANDOM_STATE = 42
 
 
 def resolve_csv_path(base_dir: str) -> str:
-    # Prefer the dataset folder, but keep the root file as a fallback for this repo layout.
-    dataset_path = os.path.normpath(os.path.join(base_dir, "dataset", "all_emotions.csv"))
-    if os.path.isfile(dataset_path):
-        return dataset_path
-
-    root_path = os.path.normpath(os.path.join(base_dir, "all_emotions.csv"))
-    if os.path.isfile(root_path):
-        return root_path
+    search_paths = [
+        os.path.normpath(os.path.join(base_dir, "dataset", "all_emotions.csv")),
+        os.path.normpath(os.path.join(base_dir, "all_emotions.csv")),
+        os.path.normpath(os.path.join(os.path.dirname(base_dir), "dataset", "all_emotions.csv")),
+        os.path.normpath(os.path.join(os.path.dirname(base_dir), "all_emotions.csv")),
+    ]
+    for path in search_paths:
+        if os.path.isfile(path):
+            return path
 
     raise FileNotFoundError(
-        f"Could not find all_emotions.csv in '{dataset_path}' or '{root_path}'."
+        f"Could not find all_emotions.csv. Searched in: {search_paths}"
     )
 
 
@@ -89,7 +90,8 @@ def build_models(num_classes: int):
 
 
 def ensure_figures_dir(base_dir: str) -> str:
-    figures_dir = os.path.join(base_dir, "figures")
+    project_root = base_dir if os.path.basename(base_dir) != "src" else os.path.dirname(base_dir)
+    figures_dir = os.path.join(project_root, "figures")
     os.makedirs(figures_dir, exist_ok=True)
     return figures_dir
 

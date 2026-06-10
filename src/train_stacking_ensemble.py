@@ -83,8 +83,8 @@ print(f"CUDA Available (PyTorch): {CUDA_AVAILABLE}")
 # ============================================================
 # Path Configuration
 # ============================================================
-_base = os.getcwd()
-_project_root = os.path.dirname(_base) if os.path.basename(_base).lower() == "training" else _base
+_base = os.path.dirname(os.path.abspath(__file__))
+_project_root = os.path.dirname(_base) if os.path.basename(_base).lower() == "src" else _base
 ALL_EMOTIONS_CSV = os.path.normpath(os.path.join(_project_root, "dataset", "all_emotions.csv"))
 if not os.path.isfile(ALL_EMOTIONS_CSV):
     fallback_csv = os.path.normpath(os.path.join(_project_root, "all_emotions.csv"))
@@ -597,16 +597,19 @@ print(f"Stacking Ensemble | Weighted F1: {ensemble_f1:.4f} | Cohen's Kappa: {ens
 
 # Save trained models and preprocessors to disk
 print("\nSerializing production artifacts for live backend...")
-joblib.dump(xgb_model, 'ser_xgb_model.joblib')
-joblib.dump(lgb_model, 'ser_lgb_model.joblib')
-joblib.dump(cb_model,  'ser_cb_model.joblib')
-joblib.dump(meta_model, 'ser_meta_model.joblib')
-joblib.dump(scaler,    'ser_ensemble_scaler.joblib')
-joblib.dump(encoder,   'ser_ensemble_encoder.joblib')
+models_dir = os.path.join(_project_root, 'models')
+os.makedirs(models_dir, exist_ok=True)
+joblib.dump(xgb_model, os.path.join(models_dir, 'ser_xgb_model.joblib'))
+joblib.dump(lgb_model, os.path.join(models_dir, 'ser_lgb_model.joblib'))
+joblib.dump(cb_model,  os.path.join(models_dir, 'ser_cb_model.joblib'))
+joblib.dump(meta_model, os.path.join(models_dir, 'ser_meta_model.joblib'))
+joblib.dump(scaler,    os.path.join(models_dir, 'ser_ensemble_scaler.joblib'))
+joblib.dump(encoder,   os.path.join(models_dir, 'ser_ensemble_encoder.joblib'))
 print("SUCCESS: Models, scaler, encoder, and stacking meta-classifier saved to disk!")
 
 # Save classification report to file
-with open('stacking_report.txt', 'w') as f:
+report_path = os.path.join(_project_root, 'stacking_report.txt')
+with open(report_path, 'w') as f:
     f.write('=== Speech Emotion Recognition Stacking Ensemble Training Report ===\n\n')
     f.write('=== XGBoost Weighted F1 ===\n')
     f.write(f'{xgb_f1:.4f}\n\n')
@@ -618,7 +621,7 @@ with open('stacking_report.txt', 'w') as f:
     f.write(classification_report(y_test, ensemble_pred, target_names=encoder.classes_))
     f.write(f'\nEnsemble Weighted F1: {ensemble_f1:.4f}\n')
     f.write(f'Ensemble Cohen Kappa: {ensemble_kappa:.4f}\n')
-print('Saved performance report to stacking_report.txt')
+print(f'Saved performance report to {report_path}')
 
 # [CELL 27 OUTPUT]
 # > 

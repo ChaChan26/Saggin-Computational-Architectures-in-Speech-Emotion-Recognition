@@ -23,16 +23,18 @@ RANDOM_STATE = 42
 
 
 def resolve_csv_path(base_dir: str) -> str:
-    dataset_path = os.path.normpath(os.path.join(base_dir, "dataset", "all_emotions.csv"))
-    if os.path.isfile(dataset_path):
-        return dataset_path
-
-    root_path = os.path.normpath(os.path.join(base_dir, "all_emotions.csv"))
-    if os.path.isfile(root_path):
-        return root_path
+    search_paths = [
+        os.path.normpath(os.path.join(base_dir, "dataset", "all_emotions.csv")),
+        os.path.normpath(os.path.join(base_dir, "all_emotions.csv")),
+        os.path.normpath(os.path.join(os.path.dirname(base_dir), "dataset", "all_emotions.csv")),
+        os.path.normpath(os.path.join(os.path.dirname(base_dir), "all_emotions.csv")),
+    ]
+    for path in search_paths:
+        if os.path.isfile(path):
+            return path
 
     raise FileNotFoundError(
-        f"Could not find all_emotions.csv in '{dataset_path}' or '{root_path}'."
+        f"Could not find all_emotions.csv. Searched in: {search_paths}"
     )
 
 
@@ -200,7 +202,8 @@ def main() -> None:
     print(f"Best CatBoost Mean CV F1: {study_cb.best_value:.4f}")
     best_params["catboost"] = study_cb.best_params
 
-    out_path = os.path.join(base_dir, "best_params.json")
+    project_root = base_dir if os.path.basename(base_dir) != "src" else os.path.dirname(base_dir)
+    out_path = os.path.join(project_root, "best_params.json")
     with open(out_path, "w") as f:
         json.dump(best_params, f, indent=4)
 

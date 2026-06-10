@@ -14,25 +14,43 @@ Speech-Emotion-Recognition/
 │
 ├── figures/                      # Generated performance plots (Confusion matrices, comparisons)
 │
-├── checking_csvfile.ipynb        # Data inspection & cleaning
-├── visualize_data.ipynb          # Exploratory Data Analysis (EDA) & class plots
-├── random_forest.ipynb           # Baseline Random Forest model, tuning, & evaluation
-├── advanced_ml_models.ipynb      # Advanced modeling (XGBoost, LightGBM, SVM)
-├── ensemble_advanced.ipynb       # Weighted XGBoost + LightGBM ensemble with visualizations
-├── production_ensemble_pipeline.ipynb # Base ensemble pipeline notebook
-├── production_ensemble_pipeline_fixed.ipynb # Updated ensemble pipeline notebook
-├── production_optuna_pipeline.ipynb # Optuna tuning notebook
-├── train_final_ensemble.ipynb    # Soft-voting ensemble training notebook
-├── train_stacking_ensemble.ipynb # Stacking ensemble training notebook
-├── tune_pipeline.py              # Hyperparameter tuning script via Optuna
-├── train_lightgbm.py             # Single LightGBM model training script
-├── train_final_ensemble.py       # Optimally weighted ensemble training script
-├── train_stacking_ensemble.py    # Stacking ensemble classifier training script (best model)
-├── neutral_improve.py            # Model training & threshold moving for neutral class
-├── mlp_baseline.py               # PyTorch Multi-layer Perceptron baseline script
-├── extracted_ensemble_pipeline.py # Production deployment / inference pipeline script
+├── notebooks/                    # All exploratory and baseline Jupyter Notebooks (.ipynb)
+│   ├── checking_csvfile.ipynb
+│   ├── visualize_data.ipynb
+│   ├── random_forest.ipynb
+│   ├── advanced_ml_models.ipynb
+│   ├── ensemble_advanced.ipynb
+│   ├── production_ensemble_pipeline.ipynb
+│   ├── production_ensemble_pipeline_fixed.ipynb
+│   ├── production_optuna_pipeline.ipynb
+│   ├── train_final_ensemble.ipynb
+│   └── train_stacking_ensemble.ipynb
+│
+├── src/                          # All executable Python scripts (.py)
+│   ├── tune_pipeline.py              # Hyperparameter tuning script via Optuna
+│   ├── train_lightgbm.py             # Single LightGBM model training script
+│   ├── train_final_ensemble.py       # Optimally weighted ensemble training script
+│   ├── train_stacking_ensemble.py    # Stacking ensemble classifier training script (best model)
+│   ├── neutral_improve.py            # Model training & threshold moving for neutral class
+│   ├── mlp_baseline.py               # PyTorch Multi-layer Perceptron baseline script
+│   ├── ensemble_advanced.py          # Soft voting ensemble script
+│   └── extracted_ensemble_pipeline.py # Production deployment / inference pipeline script
+│
+├── models/                       # Saved / serialized model checkpoints
+│   ├── ser_cb_model.joblib
+│   ├── ser_ensemble_encoder.joblib
+│   ├── ser_ensemble_scaler.joblib
+│   ├── ser_lgb_model.joblib
+│   ├── ser_meta_model.joblib
+│   ├── ser_optuna_encoder.joblib
+│   ├── ser_optuna_lightgbm.joblib
+│   ├── ser_optuna_scaler.joblib
+│   ├── ser_xgb_model.joblib
+│   └── best_mlp_model.pth
+│
 ├── requirements.txt              # Standard project dependencies
-└── stacking_report.txt           # Latest stacking ensemble validation report
+├── stacking_report.txt           # Latest stacking ensemble validation report
+└── .gitignore                    # Local cache ignore rules
 ```
 
 ---
@@ -99,19 +117,19 @@ This is the strongest single-model result currently reported in the project. A w
 2. **Train the Stacking Ensemble (Best Model):**
    To train the best-performing stacking ensemble model and serialize the production assets:
    ```bash
-   python train_stacking_ensemble.py
+   python src/train_stacking_ensemble.py
    ```
 
 3. **Tune Hyperparameters:**
    To run automated hyperparameter tuning via Optuna for all base models:
    ```bash
-   python tune_pipeline.py
+   python src/tune_pipeline.py
    ```
 
 4. **Run PyTorch Deep Learning Baseline:**
    To train the Multilayer Perceptron neural network baseline model:
    ```bash
-   python mlp_baseline.py
+   python src/mlp_baseline.py
    ```
 
 5. **Explore Notebooks:**

@@ -23,16 +23,18 @@ RANDOM_STATE = 42
 
 
 def resolve_csv_path(base_dir: str) -> str:
-    dataset_path = os.path.normpath(os.path.join(base_dir, "dataset", "all_emotions.csv"))
-    if os.path.isfile(dataset_path):
-        return dataset_path
-
-    root_path = os.path.normpath(os.path.join(base_dir, "all_emotions.csv"))
-    if os.path.isfile(root_path):
-        return root_path
+    search_paths = [
+        os.path.normpath(os.path.join(base_dir, "dataset", "all_emotions.csv")),
+        os.path.normpath(os.path.join(base_dir, "all_emotions.csv")),
+        os.path.normpath(os.path.join(os.path.dirname(base_dir), "dataset", "all_emotions.csv")),
+        os.path.normpath(os.path.join(os.path.dirname(base_dir), "all_emotions.csv")),
+    ]
+    for path in search_paths:
+        if os.path.isfile(path):
+            return path
 
     raise FileNotFoundError(
-        f"Could not find all_emotions.csv in '{dataset_path}' or '{root_path}'."
+        f"Could not find all_emotions.csv. Searched in: {search_paths}"
     )
 
 
@@ -61,7 +63,8 @@ def load_data(csv_path: str) -> tuple[pd.DataFrame, str, list[str]]:
 
 
 def load_best_params(base_dir: str) -> dict[str, dict[str, Any]]:
-    params_path = os.path.join(base_dir, "best_params.json")
+    project_root = base_dir if os.path.basename(base_dir) != "src" else os.path.dirname(base_dir)
+    params_path = os.path.join(project_root, "best_params.json")
     if os.path.isfile(params_path):
         with open(params_path, "r") as f:
             return json.load(f)
@@ -157,7 +160,8 @@ def optimize_ensemble_weights(
 
 
 def ensure_figures_dir(base_dir: str) -> str:
-    figures_dir = os.path.join(base_dir, "figures")
+    project_root = base_dir if os.path.basename(base_dir) != "src" else os.path.dirname(base_dir)
+    figures_dir = os.path.join(project_root, "figures")
     os.makedirs(figures_dir, exist_ok=True)
     return figures_dir
 

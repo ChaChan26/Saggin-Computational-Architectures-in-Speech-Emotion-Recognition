@@ -11,8 +11,12 @@ from sklearn.metrics import classification_report, confusion_matrix
 def main():
     # 1. Production Pathing: Locate dataset relative to the script location
     script_dir = os.path.dirname(os.path.abspath(__file__))
-    data_path = os.path.join(script_dir, 'dataset', 'all_emotions.csv')
+    project_root = script_dir if os.path.basename(script_dir) != "src" else os.path.dirname(script_dir)
+    data_path = os.path.join(project_root, 'dataset', 'all_emotions.csv')
     
+    if not os.path.exists(data_path):
+        data_path = os.path.join(project_root, 'all_emotions.csv')
+        
     if not os.path.exists(data_path):
         raise FileNotFoundError(
             f"Production dataset not found at {data_path}. Ensure 'all_emotions.csv' "
@@ -101,8 +105,10 @@ def main():
     
     # 9. Production Serialization: Exporting model and encoder artifacts
     print("\nSerializing production artifacts...")
-    model_filename = os.path.join(script_dir, 'ser_production_model.joblib')
-    encoder_filename = os.path.join(script_dir, 'ser_label_encoder.joblib')
+    models_dir = os.path.join(project_root, 'models')
+    os.makedirs(models_dir, exist_ok=True)
+    model_filename = os.path.join(models_dir, 'ser_production_model.joblib')
+    encoder_filename = os.path.join(models_dir, 'ser_label_encoder.joblib')
     
     joblib.dump(model, model_filename)
     joblib.dump(le, encoder_filename)
