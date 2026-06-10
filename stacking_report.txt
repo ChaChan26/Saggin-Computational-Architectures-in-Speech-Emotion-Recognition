@@ -1,0 +1,27 @@
+=== Speech Emotion Recognition Stacking Ensemble Training Report ===
+
+=== XGBoost Weighted F1 ===
+0.8632
+
+=== LightGBM Weighted F1 ===
+0.8704
+
+=== CatBoost Weighted F1 ===
+0.8355
+
+=== Stacking Ensemble (XGB + LGB + CB -> Extra Trees) ===
+              precision    recall  f1-score   support
+
+       anger       0.96      0.91      0.93      1863
+     disgust       0.86      0.88      0.87      1863
+        fear       0.87      0.87      0.87      1863
+       happy       0.86      0.86      0.86      1863
+     neutral       0.81      0.85      0.83      1583
+         sad       0.89      0.86      0.87      1862
+
+    accuracy                           0.87     10897
+   macro avg       0.87      0.87      0.87     10897
+weighted avg       0.87      0.87      0.87     10897
+
+Ensemble Weighted F1: 0.8739
+Ensemble Cohen Kappa: 0.8481

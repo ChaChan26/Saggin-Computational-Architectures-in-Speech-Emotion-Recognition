@@ -7,19 +7,34 @@ This project builds a robust **Speech Emotion Recognition (SER)** machine learni
 ## 📂 Project Structure
 
 ```
-Nigga1-main/
+Speech-Emotion-Recognition/
 │
 ├── dataset/
 │   └── all_emotions.csv          # Feature dataset (54,485 audio samples)
 │
-├── checking_csvfile.ipynb        # Data inspection & cleaning
-├── visualize_data.ipynb          # Exploratory Data Analysis (EDA) & class plots
-├── random_forest.ipynb           # Baseline Random Forest model, tuning, & evaluation
-├── advanced_ml_models.ipynb      # Advanced modeling (XGBoost, LightGBM, SVM)
-├── ensemble_advanced.ipynb       # Weighted XGBoost + LightGBM ensemble with visualizations
-├── mlp_baseline.py               # Deep Learning (PyTorch MLP) baseline classifier
-├── all_emotions.csv              # Feature dataset (54,485 audio samples)
-└── requirements.txt              # Standard project dependencies
+├── figures/                      # Generated performance plots (Confusion matrices, comparisons)
+│
+├── notebooks/                    # Exploratory & backup Jupyter Notebooks
+│   ├── checking_csvfile.ipynb
+│   ├── visualize_data.ipynb
+│   ├── random_forest.ipynb
+│   ├── advanced_ml_models.ipynb
+│   ├── ensemble_advanced.ipynb
+│   ├── production_ensemble_pipeline.ipynb
+│   ├── production_ensemble_pipeline_fixed.ipynb
+│   ├── production_optuna_pipeline.ipynb
+│   ├── train_final_ensemble.ipynb
+│   └── train_stacking_ensemble.ipynb
+│
+├── tune_pipeline.py              # Hyperparameter tuning script via Optuna
+├── train_lightgbm.py             # Single LightGBM model training script
+├── train_final_ensemble.py       # Optimally weighted ensemble training script
+├── train_stacking_ensemble.py    # Stacking ensemble classifier training script (best model)
+├── neutral_improve.py            # Model training & threshold moving for neutral class
+├── mlp_baseline.py               # PyTorch Multi-layer Perceptron baseline script
+├── extracted_ensemble_pipeline.py # Production deployment / inference pipeline script
+├── requirements.txt              # Standard project dependencies
+└── stacking_report.txt           # Latest stacking ensemble validation report
 ```
 
 ---
@@ -83,15 +98,26 @@ This is the strongest single-model result currently reported in the project. A w
    pip install -r requirements.txt
    ```
 
-2. **Run PyTorch Deep Learning Baseline:**
+2. **Train the Stacking Ensemble (Best Model):**
+   To train the best-performing stacking ensemble model and serialize the production assets:
+   ```bash
+   python train_stacking_ensemble.py
+   ```
+
+3. **Tune Hyperparameters:**
+   To run automated hyperparameter tuning via Optuna for all base models:
+   ```bash
+   python tune_pipeline.py
+   ```
+
+4. **Run PyTorch Deep Learning Baseline:**
    To train the Multilayer Perceptron neural network baseline model:
    ```bash
    python mlp_baseline.py
    ```
-   Note: `mlp_baseline.py` currently expects `all_emotions.csv` under `dataset/`. The file in this repo is stored at the project root, so either move it or update the script path before running.
 
-3. **Explore Jupyter Notebooks:**
-   Open the notebook environment to execute baseline and boosting models:
+5. **Explore Notebooks:**
+   Open the notebooks inside the `notebooks/` folder for historical baselines and visualization experiments:
    ```bash
    jupyter notebook
    ```
