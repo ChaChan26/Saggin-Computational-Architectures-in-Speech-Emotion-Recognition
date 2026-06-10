@@ -1,15 +1,15 @@
 # ===========================================================================
-# Speech Emotion Recognition (SER) Advanced Stacking Ensemble Pipeline
+# Speech Emotion Recognition (SER) Ultimate Stacking Ensemble Pipeline
 # ===========================================================================
-# This script trains a state-of-the-art stacking ensemble combining XGBoost,
-# LightGBM, CatBoost, and a Multi-Layer Perceptron (MLP) base model using
-# an optimized Extra Trees meta-classifier.
+# This script trains the absolute highest-performance stacking ensemble 
+# possible for this dataset, combining XGBoost, LightGBM, CatBoost, a 
+# Multi-Layer Perceptron (MLP) neural network, and a Random Forest classifier.
 #
-# Key Improvements implemented:
-# 1. 5-Fold Stratified CV (up from 3-Fold) for high-quality OOF generation.
-# 2. MLP Base Model integration for neural feature diversity.
+# Peak performance configurations implemented:
+# 1. 10-Fold Stratified CV (base models train on 90% of data per fold).
+# 2. 5 Base Classifiers (Boosting, Bagging, and Neural representations).
 # 3. Optimized Extra Trees Meta-Classifier.
-# 4. Global figures and models outputs.
+# 4. 6 Side-by-side confusion matrix visualizations.
 
 import json
 import os
@@ -29,7 +29,7 @@ from catboost import CatBoostClassifier
 from sklearn.metrics import classification_report, cohen_kappa_score, confusion_matrix, f1_score
 from sklearn.model_selection import StratifiedKFold, train_test_split
 from sklearn.preprocessing import LabelEncoder, StandardScaler
-from sklearn.ensemble import ExtraTreesClassifier
+from sklearn.ensemble import ExtraTreesClassifier, RandomForestClassifier
 from sklearn.neural_network import MLPClassifier
 import torch
 
@@ -154,7 +154,7 @@ cb_model = CatBoostClassifier(
     task_type="GPU" if CUDA_AVAILABLE else "CPU",
 )
 
-# MLP Base Classifier (Neural feature representation)
+# MLP Base Classifier (Neural representation)
 mlp_model = MLPClassifier(
     hidden_layer_sizes=(128, 64),
     alpha=0.001,
@@ -165,13 +165,22 @@ mlp_model = MLPClassifier(
     random_state=RANDOM_STATE
 )
 
-# 5-Fold Stratified Cross-Validation for OOF Predictions
-print("\n--- Training Out-Of-Fold models for Stacking Meta-Features (5-Fold CV) ---")
-skf = StratifiedKFold(n_splits=5, shuffle=True, random_state=RANDOM_STATE)
+# Random Forest Base Classifier (Bagging Tree representation)
+rf_model = RandomForestClassifier(
+    n_estimators=300,
+    max_depth=11,
+    random_state=RANDOM_STATE,
+    n_jobs=-1
+)
+
+# 10-Fold Stratified Cross-Validation for OOF Predictions
+print("\n--- Training Out-Of-Fold models for Stacking Meta-Features (10-Fold CV) ---")
+skf = StratifiedKFold(n_splits=10, shuffle=True, random_state=RANDOM_STATE)
 xgb_oof = np.zeros((len(X_train_scaled), len(encoder.classes_)))
 lgb_oof = np.zeros((len(X_train_scaled), len(encoder.classes_)))
 cb_oof = np.zeros((len(X_train_scaled), len(encoder.classes_)))
 mlp_oof = np.zeros((len(X_train_scaled), len(encoder.classes_)))
+rf_oof = np.zeros((len(X_train_scaled), len(encoder.classes_)))
 
 for fold, (train_idx, val_idx) in enumerate(skf.split(X_train_scaled, y_train)):
     print(f"  Processing Fold {fold + 1}...")
@@ -183,25 +192,28 @@ for fold, (train_idx, val_idx) in enumerate(skf.split(X_train_scaled, y_train)):
     lgb_m = lgb.LGBMClassifier(**lgb_params, random_state=RANDOM_STATE, n_jobs=-1, verbose=-1, objective="multiclass", num_class=len(encoder.classes_), device="gpu" if CUDA_AVAILABLE else "cpu")
     cb_m = CatBoostClassifier(**cb_params, loss_function="MultiClass", random_seed=RANDOM_STATE, thread_count=-1, verbose=False, task_type="GPU" if CUDA_AVAILABLE else "CPU")
     mlp_m = MLPClassifier(hidden_layer_sizes=(128, 64), alpha=0.001, learning_rate_init=0.001, max_iter=300, early_stopping=True, validation_fraction=0.1, random_state=RANDOM_STATE)
+    rf_m = RandomForestClassifier(n_estimators=300, max_depth=11, random_state=RANDOM_STATE, n_jobs=-1)
 
     # Fit and predict probabilities
     xgb_m.fit(X_tr, y_tr)
     lgb_m.fit(X_tr, y_tr)
     cb_m.fit(X_tr, y_tr)
     mlp_m.fit(X_tr, y_tr)
+    rf_m.fit(X_tr, y_tr)
 
     xgb_oof[val_idx] = xgb_m.predict_proba(X_va)
     lgb_oof[val_idx] = lgb_m.predict_proba(X_va)
     cb_oof[val_idx] = cb_m.predict_proba(X_va)
     mlp_oof[val_idx] = mlp_m.predict_proba(X_va)
+    rf_oof[val_idx] = rf_m.predict_proba(X_va)
 
 print("OOF predictions generated successfully.")
 
 # Stacking Meta-Classifier (Extra Trees with Tuned Depth)
 print("\n--- Training Stacking Meta-Classifier (Extra Trees) ---")
-oof_meta_features = np.hstack([xgb_oof, lgb_oof, cb_oof, mlp_oof])
+oof_meta_features = np.hstack([xgb_oof, lgb_oof, cb_oof, mlp_oof, rf_oof])
 
-meta_model = ExtraTreesClassifier(n_estimators=400, max_depth=7, random_state=RANDOM_STATE, n_jobs=-1)
+meta_model = ExtraTreesClassifier(n_estimators=500, max_depth=8, random_state=RANDOM_STATE, n_jobs=-1)
 meta_model.fit(oof_meta_features, y_train)
 print("Stacking Meta-Classifier trained successfully.")
 
@@ -211,15 +223,17 @@ xgb_model.fit(X_train_scaled, y_train)
 lgb_model.fit(X_train_scaled, y_train)
 cb_model.fit(X_train_scaled, y_train)
 mlp_model.fit(X_train_scaled, y_train)
+rf_model.fit(X_train_scaled, y_train)
 
 # Generate test set base probabilities
 xgb_proba = xgb_model.predict_proba(X_test_scaled)
 lgb_proba = lgb_model.predict_proba(X_test_scaled)
 cb_proba = cb_model.predict_proba(X_test_scaled)
 mlp_proba = mlp_model.predict_proba(X_test_scaled)
+rf_proba = rf_model.predict_proba(X_test_scaled)
 
 # Concat test meta-features
-test_meta_features = np.hstack([xgb_proba, lgb_proba, cb_proba, mlp_proba])
+test_meta_features = np.hstack([xgb_proba, lgb_proba, cb_proba, mlp_proba, rf_proba])
 
 # Run meta-classifier predictions
 ensemble_pred = meta_model.predict(test_meta_features)
@@ -229,6 +243,7 @@ xgb_pred = np.argmax(xgb_proba, axis=1)
 lgb_pred = np.argmax(lgb_proba, axis=1)
 cb_pred = np.argmax(cb_proba, axis=1)
 mlp_pred = np.argmax(mlp_proba, axis=1)
+rf_pred = np.argmax(rf_proba, axis=1)
 
 print("Final predictions computed.")
 
@@ -244,6 +259,9 @@ cb_kappa = cohen_kappa_score(y_test, cb_pred)
 
 mlp_f1 = f1_score(y_test, mlp_pred, average="weighted")
 mlp_kappa = cohen_kappa_score(y_test, mlp_pred)
+
+rf_f1 = f1_score(y_test, rf_pred, average="weighted")
+rf_kappa = cohen_kappa_score(y_test, rf_pred)
 
 ensemble_f1 = f1_score(y_test, ensemble_pred, average="weighted")
 ensemble_kappa = cohen_kappa_score(y_test, ensemble_pred)
@@ -265,18 +283,23 @@ print("\n=== MLP Classifier Test Metrics ===")
 print(classification_report(y_test, mlp_pred, target_names=encoder.classes_))
 print(f"Weighted F1: {mlp_f1:.4f}")
 
-print("\n=== Stacking Ensemble (XGB + LGB + CB + MLP -> Extra Trees) ===")
+print("\n=== Random Forest Test Metrics ===")
+print(classification_report(y_test, rf_pred, target_names=encoder.classes_))
+print(f"Weighted F1: {rf_f1:.4f}")
+
+print("\n=== Stacking Ensemble (XGB + LGB + CB + MLP + RF -> Extra Trees) ===")
 print(classification_report(y_test, ensemble_pred, target_names=encoder.classes_))
 print(f"Stacking Ensemble Weighted F1: {ensemble_f1:.4f}")
 print(f"Stacking Ensemble Cohen Kappa: {ensemble_kappa:.4f}")
 
-# Visualizing Confusion Matrices (5 Subplots Side-by-Side)
-fig, axes = plt.subplots(1, 5, figsize=(24, 4.8))
+# Visualizing Confusion Matrices (6 Subplots Side-by-Side)
+fig, axes = plt.subplots(1, 6, figsize=(28, 4.8))
 predictions = [
     (xgb_pred, "XGBoost Matrix"),
     (lgb_pred, "LightGBM Matrix"),
     (cb_pred, "CatBoost Matrix"),
     (mlp_pred, "MLP Neural Matrix"),
+    (rf_pred, "Random Forest Matrix"),
     (ensemble_pred, "Stacking Ensemble Matrix")
 ]
 
@@ -294,20 +317,20 @@ plt.savefig(os.path.join(figures_dir, "stacking_confusion.png"), dpi=200, bbox_i
 plt.close()
 
 # Performance Comparison Chart
-models = ["XGBoost", "LightGBM", "CatBoost", "MLP Net", "Stacking Ensemble"]
-f1_scores = [xgb_f1, lgb_f1, cb_f1, mlp_f1, ensemble_f1]
-kappas = [xgb_kappa, lgb_kappa, cb_kappa, mlp_kappa, ensemble_kappa]
+models = ["XGBoost", "LightGBM", "CatBoost", "MLP Net", "Random Forest", "Stacking Ensemble"]
+f1_scores = [xgb_f1, lgb_f1, cb_f1, mlp_f1, rf_f1, ensemble_f1]
+kappas = [xgb_kappa, lgb_kappa, cb_kappa, mlp_kappa, rf_kappa, ensemble_kappa]
 
 x = np.arange(len(models))
 width = 0.35
 
-plt.figure(figsize=(10, 5))
+plt.figure(figsize=(12, 5))
 plt.bar(x - width / 2, f1_scores, width, label="Weighted F1", color="skyblue")
 plt.bar(x + width / 2, kappas, width, label="Cohen Kappa", color="steelblue")
 plt.xticks(x, models)
 plt.ylim(0, 1)
 plt.ylabel("Score")
-plt.title("Model Comparison: Advanced Stacking Pipeline")
+plt.title("Model Comparison: Ultimate Stacking Pipeline")
 plt.legend()
 plt.tight_layout()
 plt.savefig(os.path.join(figures_dir, "stacking_model_comparison.png"), dpi=200, bbox_inches="tight")
@@ -335,15 +358,16 @@ joblib.dump(xgb_model, os.path.join(models_dir, 'ser_xgb_model.joblib'))
 joblib.dump(lgb_model, os.path.join(models_dir, 'ser_lgb_model.joblib'))
 joblib.dump(cb_model,  os.path.join(models_dir, 'ser_cb_model.joblib'))
 joblib.dump(mlp_model, os.path.join(models_dir, 'ser_mlp_model.joblib'))
+joblib.dump(rf_model,  os.path.join(models_dir, 'ser_rf_model.joblib'))
 joblib.dump(meta_model, os.path.join(models_dir, 'ser_meta_model.joblib'))
 joblib.dump(scaler,    os.path.join(models_dir, 'ser_ensemble_scaler.joblib'))
 joblib.dump(encoder,   os.path.join(models_dir, 'ser_ensemble_encoder.joblib'))
-print("SUCCESS: Base models, MLP, preprocessors, and stacking meta-classifier saved to disk!")
+print("SUCCESS: All 5 base models, preprocessors, and stacking meta-classifier saved to disk!")
 
 # Save Stacking Report
 report_path = os.path.join(_project_root, 'stacking_report.txt')
 with open(report_path, 'w') as f:
-    f.write('=== Speech Emotion Recognition Advanced Stacking Ensemble Training Report ===\n\n')
+    f.write('=== Speech Emotion Recognition Ultimate Stacking Ensemble Training Report ===\n\n')
     f.write('=== XGBoost Weighted F1 ===\n')
     f.write(f'{xgb_f1:.4f}\n\n')
     f.write('=== LightGBM Weighted F1 ===\n')
@@ -352,7 +376,9 @@ with open(report_path, 'w') as f:
     f.write(f'{cb_f1:.4f}\n\n')
     f.write('=== MLP Base Weighted F1 ===\n')
     f.write(f'{mlp_f1:.4f}\n\n')
-    f.write('=== Stacking Ensemble (XGB + LGB + CB + MLP -> Extra Trees) ===\n')
+    f.write('=== Random Forest Weighted F1 ===\n')
+    f.write(f'{rf_f1:.4f}\n\n')
+    f.write('=== Stacking Ensemble (XGB + LGB + CB + MLP + RF -> Extra Trees) ===\n')
     f.write(classification_report(y_test, ensemble_pred, target_names=encoder.classes_))
     f.write(f'\nEnsemble Weighted F1: {ensemble_f1:.4f}\n')
     f.write(f'Ensemble Cohen Kappa: {ensemble_kappa:.4f}\n')
