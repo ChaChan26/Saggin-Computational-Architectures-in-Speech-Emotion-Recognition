@@ -1,20 +1,20 @@
 === Speech Emotion Recognition Standalone LightGBM Training Report ===
 
 === LightGBM Weighted F1 ===
-0.8768
+0.88083849
 
 === LightGBM Cohen Kappa ===
-0.8517
+0.85656261
 
 === LightGBM Classification Report ===
               precision    recall  f1-score   support
 
        anger       0.95      0.91      0.93       932
-     disgust       0.86      0.90      0.88       931
-        fear       0.88      0.87      0.87       932
-       happy       0.86      0.85      0.85       932
+     disgust       0.85      0.90      0.88       931
+        fear       0.89      0.88      0.89       932
+       happy       0.87      0.86      0.87       932
      neutral       0.82      0.85      0.83       791
-         sad       0.89      0.88      0.88       931
+         sad       0.90      0.87      0.88       931
 
     accuracy                           0.88      5449
    macro avg       0.88      0.88      0.88      5449

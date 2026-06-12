@@ -8,17 +8,21 @@
         "gamma": 1.8002000545065706e-05
     },
     "lightgbm": {
-        "n_estimators": 489,
-        "max_depth": 11,
-        "num_leaves": 53,
-        "learning_rate": 0.2921585117167112,
-        "subsample": 0.6008144336513852,
-        "colsample_bytree": 0.6069653071027851
+        "n_estimators": 901,
+        "max_depth": 15,
+        "num_leaves": 67,
+        "learning_rate": 0.1506700962289866,
+        "min_child_samples": 100,
+        "subsample": 0.9296019193435048,
+        "colsample_bytree": 0.6249331910237221,
+        "reg_alpha": 0.00012375810483760454,
+        "reg_lambda": 3.071559832053178e-07
     },
     "catboost": {
         "iterations": 473,
         "depth": 8,
         "learning_rate": 0.20007205792463617,
         "l2_leaf_reg": 1.3559359903722872
-    }
+    },
+    "lightgbm_class_weight": "balanced"
 }

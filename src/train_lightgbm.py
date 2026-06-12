@@ -193,8 +193,8 @@ def main() -> None:
 
     print("\n=== LightGBM Test Classification Report ===")
     print(classification_report(y_test, lgb_pred, target_names=encoder.classes_))
-    print(f"LightGBM Test Weighted F1: {test_f1:.4f}")
-    print(f"LightGBM Test Cohen's Kappa: {test_kappa:.4f}")
+    print(f"LightGBM Test Weighted F1: {test_f1:.8f}")
+    print(f"LightGBM Test Cohen's Kappa: {test_kappa:.8f}")
 
     # Save visualization plots
     confusion_path = os.path.join(figures_dir, "lightgbm_confusion.png")
@@ -230,13 +230,25 @@ def main() -> None:
     with open(report_path, 'w') as f:
         f.write('=== Speech Emotion Recognition Standalone LightGBM Training Report ===\n\n')
         f.write('=== LightGBM Weighted F1 ===\n')
-        f.write(f'{test_f1:.4f}\n\n')
+        f.write(f'{test_f1:.8f}\n\n')
         f.write('=== LightGBM Cohen Kappa ===\n')
-        f.write(f'{test_kappa:.4f}\n\n')
+        f.write(f'{test_kappa:.8f}\n\n')
         f.write('=== LightGBM Classification Report ===\n')
         f.write(classification_report(y_test, lgb_pred, target_names=encoder.classes_))
 
     print(f'Saved performance report to {report_path}')
+
+    # Append summary of this run to a persistent training history log
+    import datetime
+    history_path = os.path.join(project_root, 'lightgbm_history.log')
+    with open(history_path, 'a') as f:
+        timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        f.write(f"[{timestamp}] Device: {device_type}\n")
+        f.write(f"  Weighted F1: {test_f1:.8f}\n")
+        f.write(f"  Cohen Kappa: {test_kappa:.8f}\n")
+        f.write(f"  Params: {json.dumps(lgb_params)}\n")
+        f.write("-" * 80 + "\n")
+    print(f'Appended training summary to {history_path}')
 
 
 if __name__ == "__main__":
