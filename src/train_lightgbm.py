@@ -7,12 +7,13 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
+import joblib
+
 import lightgbm as lgb
 from sklearn.metrics import classification_report, cohen_kappa_score, confusion_matrix, f1_score
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import LabelEncoder
+from sklearn.preprocessing import LabelEncoder, StandardScaler
 from sklearn.impute import SimpleImputer
-from sklearn.preprocessing import StandardScaler
 import torch
 
 warnings.filterwarnings("ignore")
@@ -62,11 +63,11 @@ def ensure_figures_dir(base_dir: str) -> str:
     return figures_dir
 
 
-def plot_confusion(y_true, y_pred, labels, title, save_path):
+def plot_confusion_matrix(y_true, y_pred, labels, save_path):
+    plt.figure(figsize=(9, 7))
     cm = confusion_matrix(y_true, y_pred)
-    plt.figure(figsize=(8, 6))
     sns.heatmap(cm, annot=True, fmt="d", cmap="Blues", xticklabels=labels, yticklabels=labels)
-    plt.title(title)
+    plt.title("LightGBM Confusion Matrix")
     plt.xlabel("Predicted")
     plt.ylabel("True")
     plt.tight_layout()
@@ -74,8 +75,23 @@ def plot_confusion(y_true, y_pred, labels, title, save_path):
     plt.close()
 
 
+def plot_f1_scores(y_true, y_pred, labels, save_path):
+    f1_per_class = f1_score(y_true, y_pred, average=None)
+    plt.figure(figsize=(9, 5))
+    sns.barplot(x=list(labels), y=f1_per_class, palette='Blues_d')
+    plt.title("Per-Class F1-Score")
+    plt.ylabel("F1-Score")
+    plt.ylim(0, 1.0)
+    for i, val in enumerate(f1_per_class):
+        plt.text(i, val + 0.02, f"{val:.3f}", ha='center', fontweight='bold')
+    plt.tight_layout()
+    plt.savefig(save_path, dpi=200, bbox_inches="tight")
+    plt.close()
+
+
 def main() -> None:
     base_dir = os.path.dirname(os.path.abspath(__file__)) if "__file__" in globals() else os.getcwd()
+    project_root = os.path.dirname(base_dir) if os.path.basename(base_dir).lower() in ["src", "notebooks"] else base_dir
     csv_path = resolve_csv_path(base_dir)
     print(f"Loading dataset from: {csv_path}")
     figures_dir = ensure_figures_dir(base_dir)
@@ -91,42 +107,37 @@ def main() -> None:
     df_cleaned = df.dropna(subset=[target_col]).copy()
     df_cleaned = df_cleaned[df_cleaned[target_col].astype(str).str.strip().str.lower() != "nan"]
 
-    # 26 features pruned via Random Forest feature importances
-    feature_cols = [
-        "F0_mean", "F0_std", "F0_range", "Energy_ mean", "Energy_ std", 
-        "ZCR_mean", "ZCR_std", "Spectral_centroid_mean", "Spectral_centroid_std", 
-        "Spectral_flux_mean", "MFCC_C0_mean", "MFCC_C1_mean", "MFCC_C2_mean", 
-        "MFCC_C3_mean", "MFCC_C5_mean", "MFCC_C7_mean", "MFCC_C10_mean", 
-        "MFCC_C0_std", "MFCC_C1_std", "MFCC_C2_std", "MFCC_C3_std", 
-        "MFCC_C5_std", "MFCC_C7_std", "Delta_MFCC_C0_std", "Delta_MFCC_C2_std", 
-        "Delta_MFCC_C3_std"
-    ]
+    FEATURE_COLS = [col for col in df_cleaned.columns if col not in [target_col]]
+    print(f"Number of features selected dynamically: {len(FEATURE_COLS)}")
 
-    # Convert all feature columns to numeric
-    for col in feature_cols:
+    # Convert feature columns to numeric, transforming infinite values to NaN
+    for col in FEATURE_COLS:
         df_cleaned[col] = pd.to_numeric(df_cleaned[col], errors="coerce").replace([np.inf, -np.inf], np.nan)
 
-    X = df_cleaned[feature_cols].values
+    X = df_cleaned[FEATURE_COLS].values
     y = df_cleaned[target_col].astype(str).str.strip().values
 
     encoder = LabelEncoder()
     y_encoded = encoder.fit_transform(y)
 
-    # Stratified Train-Test Split (80% Train, 20% Test)
+    # Stratified Train-Test Split (90/10)
     X_train, X_test, y_train, y_test = train_test_split(
         X,
         y_encoded,
-        test_size=0.2,
+        test_size=0.10,
         random_state=RANDOM_STATE,
         stratify=y_encoded,
     )
 
-    # Impute missing values with column median (Fitted ONLY on training data to prevent leakage)
+    print(f"Raw Train shape: {X_train.shape}")
+    print(f"Raw Test shape:  {X_test.shape}")
+
+    # 1. Median Imputation (Fitted ONLY on training data to prevent leakage)
     imputer = SimpleImputer(strategy="median")
     X_train_imputed = imputer.fit_transform(X_train)
     X_test_imputed = imputer.transform(X_test)
 
-    # Scale features using StandardScaler (Fitted ONLY on training data to prevent leakage)
+    # 2. StandardScaler (Fitted ONLY on training data to prevent leakage)
     scaler = StandardScaler()
     X_train_scaled = scaler.fit_transform(X_train_imputed)
     X_test_scaled = scaler.transform(X_test_imputed)
@@ -135,11 +146,22 @@ def main() -> None:
     lgb_params = load_best_params(base_dir)
     print(f"Training LightGBM model with parameters: {lgb_params}")
 
+    # Compute global class weights on training labels to handle class imbalance
+    from sklearn.utils.class_weight import compute_class_weight
+    unique_classes = np.unique(y_train)
+    global_weights = compute_class_weight(
+        class_weight='balanced',
+        classes=unique_classes,
+        y=y_train
+    )
+    global_weight_dict = dict(zip(unique_classes, global_weights))
+
     # Build LightGBM classifier (with Try-Except fallback for GPU support)
+    device_type = "gpu" if CUDA_AVAILABLE else "cpu"
     try:
-        device_type = "gpu" if CUDA_AVAILABLE else "cpu"
         model = lgb.LGBMClassifier(
             **lgb_params,
+            class_weight=global_weight_dict,
             random_state=RANDOM_STATE,
             n_jobs=-1,
             verbose=-1,
@@ -149,9 +171,10 @@ def main() -> None:
         )
         model.fit(X_train_scaled, y_train)
     except Exception as e:
-        print(f"Warning: GPU training failed or GPU build not installed ({e}). Falling back to CPU...")
+        print(f"Warning: GPU training failed ({e}). Falling back to CPU...")
         model = lgb.LGBMClassifier(
             **lgb_params,
+            class_weight=global_weight_dict,
             random_state=RANDOM_STATE,
             n_jobs=-1,
             verbose=-1,
@@ -163,20 +186,57 @@ def main() -> None:
 
     print("\n--- Model Training Complete ---")
 
-    # Evaluate on test set
-    y_pred = model.predict(X_test_scaled)
-    test_f1 = f1_score(y_test, y_pred, average="weighted")
-    test_kappa = cohen_kappa_score(y_test, y_pred)
+    # Evaluate on unseen test set
+    lgb_pred = model.predict(X_test_scaled)
+    test_f1 = f1_score(y_test, lgb_pred, average="weighted")
+    test_kappa = cohen_kappa_score(y_test, lgb_pred)
 
     print("\n=== LightGBM Test Classification Report ===")
-    print(classification_report(y_test, y_pred, target_names=encoder.classes_))
-    print(f"LightGBM Weighted F1-score: {test_f1:.4f}")
-    print(f"LightGBM Cohen's Kappa:     {test_kappa:.4f}")
+    print(classification_report(y_test, lgb_pred, target_names=encoder.classes_))
+    print(f"LightGBM Test Weighted F1: {test_f1:.4f}")
+    print(f"LightGBM Test Cohen's Kappa: {test_kappa:.4f}")
 
-    # Save confusion matrix plot
-    confusion_path = os.path.join(figures_dir, "lightgbm_only_confusion.png")
-    plot_confusion(y_test, y_pred, encoder.classes_, "LightGBM Confusion Matrix", confusion_path)
-    print(f"\nSaved confusion matrix to: {confusion_path}")
+    # Save visualization plots
+    confusion_path = os.path.join(figures_dir, "lightgbm_confusion.png")
+    plot_confusion_matrix(y_test, lgb_pred, encoder.classes_, confusion_path)
+    print(f"\nSaved confusion matrix plot to: {confusion_path}")
+
+    f1_path = os.path.join(figures_dir, "lightgbm_class_f1.png")
+    plot_f1_scores(y_test, lgb_pred, encoder.classes_, f1_path)
+    print(f"Saved class F1 plot to: {f1_path}")
+
+    # Save Trained Model, Preprocessors, and Encoder
+    print("\n--- Serializing production artifacts for standalone LightGBM model ---")
+    models_dir = os.path.join(project_root, 'models')
+    os.makedirs(models_dir, exist_ok=True)
+
+    saved_files = []
+    def save_asset(obj, name):
+        path = os.path.join(models_dir, name)
+        joblib.dump(obj, path)
+        size_mb = os.path.getsize(path) / (1024 * 1024)
+        saved_files.append(f"  - {name} ({size_mb:.2f} MB)")
+
+    save_asset(model,   'ser_lgb_standalone_model.joblib')
+    save_asset(imputer, 'ser_lgb_standalone_imputer.joblib')
+    save_asset(scaler,  'ser_lgb_standalone_scaler.joblib')
+    save_asset(encoder, 'ser_lgb_standalone_encoder.joblib')
+
+    for f_saved in saved_files:
+        print(f_saved)
+
+    # Save Standalone Performance Report
+    report_path = os.path.join(project_root, 'lightgbm_report.txt')
+    with open(report_path, 'w') as f:
+        f.write('=== Speech Emotion Recognition Standalone LightGBM Training Report ===\n\n')
+        f.write('=== LightGBM Weighted F1 ===\n')
+        f.write(f'{test_f1:.4f}\n\n')
+        f.write('=== LightGBM Cohen Kappa ===\n')
+        f.write(f'{test_kappa:.4f}\n\n')
+        f.write('=== LightGBM Classification Report ===\n')
+        f.write(classification_report(y_test, lgb_pred, target_names=encoder.classes_))
+
+    print(f'Saved performance report to {report_path}')
 
 
 if __name__ == "__main__":

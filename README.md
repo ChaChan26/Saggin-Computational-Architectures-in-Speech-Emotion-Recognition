@@ -86,22 +86,32 @@ This is the **best-documented baseline** in the repository. The MLP script is in
 
 ## 📈 Model Performance & Project Progress (Advanced & Ensemble Models)
 
-The project progressed from single baseline models to a highly optimized **Stacking Ensemble** combining **XGBoost**, **LightGBM**, **CatBoost**, **MLP**, and **Random Forest** using an **Extra Trees meta-classifier** (trained using `src/train_stacking_ensemble.py`):
+The project progressed from single baseline models to a highly optimized **Stacking Ensemble** combining **XGBoost**, **LightGBM**, **CatBoost**, **MLP**, and **Random Forest** using an **Extra Trees meta-classifier** and **Powell-based decision threshold optimization**:
 
 ### Stacking Ensemble Setup (Ultimate Configuration)
-*   **Base Models Stacked**: XGBoost, LightGBM, CatBoost, MLP Classifier, Random Forest Classifier.
-*   **CV Configuration**: 10-Fold Stratified Cross Validation (90% training data per fold).
-*   **Meta-Classifier**: Optimized Extra Trees.
+* **Base Models Stacked**: XGBoost, LightGBM, CatBoost, MLP Classifier, Random Forest Classifier.
+* **CV Configuration**: 10-Fold Stratified Cross Validation.
+* **Meta-Classifier**: Optimized Extra Trees.
+* **Decision Optimization**: Scipy Powell optimizer to calibrate class-specific prediction boundaries.
 
-This stacking ensemble currently represents the **most advanced model and progress milestone** achieved in the project, designed to maximize final F1-performance and exceed **`88.0%`**. Run `python src/train_stacking_ensemble.py` to obtain your system's exact local metrics, which are logged to `stacking_report.txt` and visualized in `figures/`.
+### Comparative Performance (Test Set)
+| Model | Weighted F1 | Cohen's Kappa |
+| :--- | :---: | :---: |
+| **Stacking Ensemble (Optimized)** | **0.8745** | **0.8488** |
+| **Stacking Ensemble (Standard)** | 0.8745 | 0.8488 |
+| **LightGBM** | 0.8704 | 0.8439 |
+| **XGBoost** | 0.8632 | 0.8353 |
+| **CatBoost** | 0.8355 | 0.8019 |
+| **MLP Neural Net** | 0.8235 | 0.7876 |
+| **Random Forest Baseline** | 0.7597 | 0.7094 |
 
-### Class Breakdown (Ensemble F1-Scores)
-*   **Anger:** `0.93` *(Easiest to classify)*
-*   **Sad:** `0.87`
-*   **Disgust:** `0.87`
-*   **Fear:** `0.87`
-*   **Happy:** `0.86`
-*   **Neutral:** `0.83` *(Hardest to classify, significantly improved from 0.79 baseline)*
+### Class Breakdown (Optimized Ensemble F1-Scores)
+* **Anger:** `0.94` *(Easiest to classify)*
+* **Sad:** `0.88`
+* **Disgust:** `0.87`
+* **Fear:** `0.87`
+* **Happy:** `0.86`
+* **Neutral:** `0.83` *(Hardest to classify, significantly improved from baseline)*
 
 ---
 
@@ -113,26 +123,19 @@ This stacking ensemble currently represents the **most advanced model and progre
    pip install -r requirements.txt
    ```
 
-2. **Train the Stacking Ensemble (Best Model):**
-   To train the best-performing stacking ensemble model and serialize the production assets:
+2. **Explore & Run Jupyter Notebooks (Recommended):**
+   All model training can be executed interactively inside the `notebooks/` folder:
+   ```bash
+   jupyter notebook notebooks/train_stacking_ensemble.ipynb
+   ```
+   Other notebooks include `train_final_ensemble.ipynb` for weighted voting and `production_optuna_pipeline.ipynb` for tuning.
+
+3. **Train the Stacking Ensemble via CLI:**
    ```bash
    python src/train_stacking_ensemble.py
    ```
 
-3. **Tune Hyperparameters:**
-   To run automated hyperparameter tuning via Optuna for all base models:
+4. **Evaluate Saved Models:**
    ```bash
-   python src/tune_pipeline.py
-   ```
-
-4. **Run PyTorch Deep Learning Baseline:**
-   To train the Multilayer Perceptron neural network baseline model:
-   ```bash
-   python src/mlp_baseline.py
-   ```
-
-5. **Explore Notebooks:**
-   Open the notebooks inside the `notebooks/` folder for historical baselines and visualization experiments:
-   ```bash
-   jupyter notebook
+   python src/review_ensemble.py
    ```
