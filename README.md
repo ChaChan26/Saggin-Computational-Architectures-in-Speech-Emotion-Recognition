@@ -43,19 +43,22 @@ Speech-Emotion-Recognition/
 │   └── best_mlp_model.pth
 │
 ├── best_model/                   # 🏆 Serialized assets for the best-performing model (LGBM Optuna Tuned)
+│   ├── README.md                 # Model card with metrics, usage, and code snippet
 │   ├── ser_optuna_lightgbm.joblib
 │   ├── ser_optuna_scaler.joblib
 │   └── ser_optuna_encoder.joblib
 │
 ├── archive/                      # Historical and legacy files
+│   ├── best_lightgbm_params.json # Archived best hyperparameters
 │   ├── notebooks/                # Archived baseline/exploratory notebooks
 │   └── src/                      # Archived CLI source scripts
 │
+├── best_params.json              # Hyperparameter configurations (LightGBM, XGBoost, CatBoost)
 ├── requirements.txt              # Standard project dependencies
-├── lightgbm_report.txt           # Latest LightGBM training report
-├── stacking_report.txt           # Latest stacking ensemble validation report
+├── lightgbm_standalone_report.txt # Standalone LightGBM training report (88% F1)
+├── stacking_report.txt           # Stacking ensemble validation report
 ├── models_review_report.txt      # Comprehensive review report for all checkpoints
-└── .gitignore                    # Local cache ignore rules
+└── .gitignore                    # Excludes binaries, datasets, figures, and caches
 ```
 
 ---
@@ -79,17 +82,9 @@ This reduced the feature count from **48** to **26 highly-informative features**
 
 ---
 
-## 📈 Model Performance (Random Forest Baseline)
+## 📈 Model Performance & Project Progress
 
-On an unseen test set of **10,897 samples**, the optimized Random Forest baseline achieves:
-*   **Weighted F1-Score:** `0.8320` (83.2%)
-*   **Cohen's Kappa:** `0.7974` (Strong agreement)
-
-This is the **best-documented baseline** in the repository. The MLP script is included as a neural-network baseline, but its results are not reported in the README.
-
-## 📈 Model Performance & Project Progress (Advanced & Ensemble Models)
-
-The project progressed from single baseline models to a highly optimized **Stacking Ensemble** combining **XGBoost**, **LightGBM**, **CatBoost**, **MLP**, and **Random Forest** using an **Extra Trees meta-classifier** and **Powell-based decision threshold optimization**:
+The project progressed from single baseline models to a highly optimized **Stacking Ensemble** combining **XGBoost**, **LightGBM**, **CatBoost**, **MLP**, and **Random Forest** using an **Extra Trees meta-classifier** and **Powell-based decision threshold optimization**. Ultimately, a standalone **Optuna-tuned LightGBM** trained on all 48 features surpassed the ensemble by +6.3 F1 points:
 
 ### Stacking Ensemble Setup (Ultimate Configuration)
 * **Base Models Stacked**: XGBoost, LightGBM, CatBoost, MLP Classifier, Random Forest Classifier.
