@@ -8,7 +8,7 @@
 ### 2. Best Model Checkpoint
 * Folder: [best_model/](file:///c:/Emotion/Saggin-Computational-Architectures-in-Speech-Emotion-Recognition/best_model)
 * Model: **LGBM Optuna Tuned** (93.42% Weighted F1, 92.09% Cohen Kappa).
-* Preprocessing: Standard Scaler + Label Encoder (on 48 features).
+* Preprocessing: `SimpleImputer(strategy="median")` → **StandardScaler** (not MinMax) → `LabelEncoder` (on 48 features).
 * Split: Stratified **80/20 split** (`test_size=0.20`, `random_state=42`).
 
 ### 3. Hyperparameter Configuration
