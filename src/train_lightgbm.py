@@ -1,3 +1,4 @@
+import datetime
 import json
 import os
 import warnings
@@ -14,11 +15,10 @@ from sklearn.metrics import classification_report, cohen_kappa_score, confusion_
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder, StandardScaler
 from sklearn.impute import SimpleImputer
-import torch
+from sklearn.utils.class_weight import compute_class_weight
 
 warnings.filterwarnings("ignore")
 
-CUDA_AVAILABLE = torch.cuda.is_available()
 RANDOM_STATE = 42
 
 
@@ -147,7 +147,6 @@ def main() -> None:
     print(f"Training LightGBM model with parameters: {lgb_params}")
 
     # Compute global class weights on training labels to handle class imbalance
-    from sklearn.utils.class_weight import compute_class_weight
     unique_classes = np.unique(y_train)
     global_weights = compute_class_weight(
         class_weight='balanced',
@@ -157,7 +156,7 @@ def main() -> None:
     global_weight_dict = dict(zip(unique_classes, global_weights))
 
     # Build LightGBM classifier (with Try-Except fallback for GPU support)
-    device_type = "gpu" if CUDA_AVAILABLE else "cpu"
+    device_type = "gpu"
     try:
         model = lgb.LGBMClassifier(
             **lgb_params,
@@ -239,7 +238,6 @@ def main() -> None:
     print(f'Saved performance report to {report_path}')
 
     # Append summary of this run to a persistent training history log
-    import datetime
     history_path = os.path.join(project_root, 'lightgbm_history.log')
     with open(history_path, 'a') as f:
         timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")

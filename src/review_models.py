@@ -84,34 +84,41 @@ def main():
     print(f"Dataset unique classes: {classes}")
     
     # -------------------------------------------------------------
-    # Prepare different data splits & feature selections
+    # Prepare raw features (no imputation yet - done after splitting)
     # -------------------------------------------------------------
-    # 1. 80/20 split on all 48 features (for Stacking & Optuna LightGBM)
+    # 1. All 48 features
     FEATURE_COLS_48 = [col for col in df_cleaned.columns if col not in [target_col]]
     
-    # Median Imputation on 48 features
-    df_imputed_48 = df_cleaned.copy()
+    # Convert to numeric and replace inf with NaN (but do NOT fill NaN yet)
+    df_numeric_48 = df_cleaned.copy()
     for col in FEATURE_COLS_48:
-        s = pd.to_numeric(df_imputed_48[col], errors="coerce").replace([np.inf, -np.inf], np.nan)
-        med = s.median()
-        if pd.isna(med):
-            med = 0.0
-        df_imputed_48[col] = s.fillna(med)
+        df_numeric_48[col] = pd.to_numeric(df_numeric_48[col], errors="coerce").replace([np.inf, -np.inf], np.nan)
         
-    X_48 = df_imputed_48[FEATURE_COLS_48].values
-    y_str = df_imputed_48[target_col].astype(str).str.strip().values
+    X_48_raw = df_numeric_48[FEATURE_COLS_48].values
+    y_str = df_numeric_48[target_col].astype(str).str.strip().values
     
     le = LabelEncoder()
     y_encoded = le.fit_transform(y_str)
     
-    X_train_80, X_test_80, y_train_80, y_test_80 = train_test_split(
-        X_48, y_encoded, test_size=0.2, random_state=42, stratify=y_encoded
+    # 80/20 split (raw, unimputed)
+    X_train_80_raw, X_test_80_raw, y_train_80, y_test_80 = train_test_split(
+        X_48_raw, y_encoded, test_size=0.2, random_state=42, stratify=y_encoded
     )
     
-    # 2. 90/10 split on all 48 features (for Standalone LightGBM)
-    X_train_90, X_test_90, y_train_90, y_test_90 = train_test_split(
-        X_48, y_encoded, test_size=0.1, random_state=42, stratify=y_encoded
+    # Impute 80/20 split using train-only medians
+    imputer_80 = SimpleImputer(strategy="median")
+    X_train_80 = imputer_80.fit_transform(X_train_80_raw)
+    X_test_80 = imputer_80.transform(X_test_80_raw)
+    
+    # 90/10 split (raw, unimputed)
+    X_train_90_raw, X_test_90_raw, y_train_90, y_test_90 = train_test_split(
+        X_48_raw, y_encoded, test_size=0.1, random_state=42, stratify=y_encoded
     )
+    
+    # Impute 90/10 split using train-only medians
+    imputer_90 = SimpleImputer(strategy="median")
+    X_train_90 = imputer_90.fit_transform(X_train_90_raw)
+    X_test_90 = imputer_90.transform(X_test_90_raw)
     
     # 3. 70/15/15 split on 26 features (for PyTorch MLP baseline)
     FEATURE_COLS_26 = [
@@ -123,18 +130,14 @@ def main():
         "MFCC_C5_std", "MFCC_C7_std", "Delta_MFCC_C0_std", "Delta_MFCC_C2_std", 
         "Delta_MFCC_C3_std"
     ]
-    df_imputed_26 = df_cleaned.copy()
+    df_numeric_26 = df_cleaned.copy()
     for col in FEATURE_COLS_26:
-        s = pd.to_numeric(df_imputed_26[col], errors="coerce").replace([np.inf, -np.inf], np.nan)
-        med = s.median()
-        if pd.isna(med):
-            med = 0.0
-        df_imputed_26[col] = s.fillna(med)
+        df_numeric_26[col] = pd.to_numeric(df_numeric_26[col], errors="coerce").replace([np.inf, -np.inf], np.nan)
         
-    X_26 = df_imputed_26[FEATURE_COLS_26].values
+    X_26_raw = df_numeric_26[FEATURE_COLS_26].values
     
-    X_tr_val, X_test_15, y_tr_val, y_test_15 = train_test_split(
-        X_26, y_encoded, test_size=0.15, random_state=42, stratify=y_encoded
+    X_tr_val_raw, X_test_15_raw, y_tr_val, y_test_15 = train_test_split(
+        X_26_raw, y_encoded, test_size=0.15, random_state=42, stratify=y_encoded
     )
     
     print("-" * 80)
@@ -159,23 +162,7 @@ def main():
         lgb_standalone_encoder = joblib.load(os.path.join(models_dir, "ser_lgb_standalone_encoder.joblib"))
         lgb_standalone_thresholds = joblib.load(os.path.join(models_dir, "ser_lgb_standalone_thresholds.joblib"))
         
-        # Standalone LightGBM preprocessed test data (on 90/10 test split)
-        # Note: the scaler and imputer are fitted only on train_90
-        # Let's get raw X_test_90 and transform them
-        # Wait, the scaler was fitted on imputed data
-        X_test_90_raw = X_test_90
-        # Wait! The raw split might have some NaN values if we didn't impute. Let's pass it through the imputer first.
-        # But we already imputed X_48 above. Let's make sure we split from df_cleaned (which has NaNs) to verify exact pipeline!
-        X_raw = df_cleaned[FEATURE_COLS_48].values.copy()
-        # Convert X_raw to numeric replacing inf
-        for i in range(X_raw.shape[1]):
-            col_vals = pd.to_numeric(X_raw[:, i], errors="coerce")
-            X_raw[:, i] = np.where(np.isinf(col_vals) | np.isnan(col_vals), np.nan, col_vals)
-            
-        _, X_test_90_raw, _, y_test_90_le = train_test_split(
-            X_raw, y_encoded, test_size=0.1, random_state=42, stratify=y_encoded
-        )
-        
+        # Use the saved imputer and scaler on the raw 90/10 test split
         X_test_90_imputed = lgb_standalone_imputer.transform(X_test_90_raw)
         X_test_90_scaled = lgb_standalone_scaler.transform(X_test_90_imputed)
         
@@ -187,27 +174,27 @@ def main():
         else:
             lgb_sa_pred_encoded = lgb_sa_pred
             
-        lgb_sa_f1 = f1_score(y_test_90_le, lgb_sa_pred_encoded, average="weighted")
-        lgb_sa_kappa = cohen_kappa_score(y_test_90_le, lgb_sa_pred_encoded)
-        lgb_sa_acc = np.mean(y_test_90_le == lgb_sa_pred_encoded)
+        lgb_sa_f1 = f1_score(y_test_90, lgb_sa_pred_encoded, average="weighted")
+        lgb_sa_kappa = cohen_kappa_score(y_test_90, lgb_sa_pred_encoded)
+        lgb_sa_acc = np.mean(y_test_90 == lgb_sa_pred_encoded)
         
         results["LGBM Standalone (Std)"] = {"F1": lgb_sa_f1, "Kappa": lgb_sa_kappa, "Accuracy": lgb_sa_acc, "Split": "90/10"}
-        reports["LGBM Standalone (Std)"] = classification_report(y_test_90_le, lgb_sa_pred_encoded, target_names=lgb_standalone_encoder.classes_)
-        confusion_matrices["LGBM Standalone (Std)"] = confusion_matrix(y_test_90_le, lgb_sa_pred_encoded)
-        class_f1_scores["LGBM Standalone (Std)"] = f1_score(y_test_90_le, lgb_sa_pred_encoded, average=None)
+        reports["LGBM Standalone (Std)"] = classification_report(y_test_90, lgb_sa_pred_encoded, target_names=lgb_standalone_encoder.classes_)
+        confusion_matrices["LGBM Standalone (Std)"] = confusion_matrix(y_test_90, lgb_sa_pred_encoded)
+        class_f1_scores["LGBM Standalone (Std)"] = f1_score(y_test_90, lgb_sa_pred_encoded, average=None)
         
         # Optimized predict (with threshold multipliers)
         lgb_sa_proba = lgb_standalone_model.predict_proba(X_test_90_scaled)
         lgb_sa_pred_opt = np.argmax(lgb_sa_proba * lgb_standalone_thresholds, axis=1)
         
-        lgb_sa_opt_f1 = f1_score(y_test_90_le, lgb_sa_pred_opt, average="weighted")
-        lgb_sa_opt_kappa = cohen_kappa_score(y_test_90_le, lgb_sa_pred_opt)
-        lgb_sa_opt_acc = np.mean(y_test_90_le == lgb_sa_pred_opt)
+        lgb_sa_opt_f1 = f1_score(y_test_90, lgb_sa_pred_opt, average="weighted")
+        lgb_sa_opt_kappa = cohen_kappa_score(y_test_90, lgb_sa_pred_opt)
+        lgb_sa_opt_acc = np.mean(y_test_90 == lgb_sa_pred_opt)
         
         results["LGBM Standalone (Opt)"] = {"F1": lgb_sa_opt_f1, "Kappa": lgb_sa_opt_kappa, "Accuracy": lgb_sa_opt_acc, "Split": "90/10"}
-        reports["LGBM Standalone (Opt)"] = classification_report(y_test_90_le, lgb_sa_pred_opt, target_names=lgb_standalone_encoder.classes_)
-        confusion_matrices["LGBM Standalone (Opt)"] = confusion_matrix(y_test_90_le, lgb_sa_pred_opt)
-        class_f1_scores["LGBM Standalone (Opt)"] = f1_score(y_test_90_le, lgb_sa_pred_opt, average=None)
+        reports["LGBM Standalone (Opt)"] = classification_report(y_test_90, lgb_sa_pred_opt, target_names=lgb_standalone_encoder.classes_)
+        confusion_matrices["LGBM Standalone (Opt)"] = confusion_matrix(y_test_90, lgb_sa_pred_opt)
+        class_f1_scores["LGBM Standalone (Opt)"] = f1_score(y_test_90, lgb_sa_pred_opt, average=None)
         
         print("Standalone LightGBM evaluated successfully!")
     except Exception as e:
@@ -230,8 +217,9 @@ def main():
         optuna_encoder = joblib.load(optuna_encoder_path)
         
         # Optuna LGBM preprocessed test data (on 80/20 split)
-        # Scale test data
-        X_test_80_scaled = optuna_scaler.transform(X_test_80)
+        # Impute test data using train-only imputer, then scale with saved scaler
+        X_test_80_imputed = imputer_80.transform(X_test_80_raw)
+        X_test_80_scaled = optuna_scaler.transform(X_test_80_imputed)
         
         optuna_pred = optuna_model.predict(X_test_80_scaled)
         if isinstance(optuna_pred[0], str):
@@ -342,17 +330,22 @@ def main():
             # Since standard scaling was fit on training 70% data, let's fit a scaling object for the 70/15/15 split
             # matching mlp_baseline.py split exactly to make predictions comparable
             scaler_mlp = StandardScaler()
-            # Split train_val (85%) and test (15%)
-            X_tr_val_raw, X_test_15_raw, y_tr_val_le, y_test_15_le = train_test_split(
-                X_26, y_encoded, test_size=0.15, random_state=42, stratify=y_encoded
+            # Split train_val (85%) and test (15%) - use raw data
+            X_tr_val_mlp_raw, X_test_15_mlp_raw, y_tr_val_le, y_test_15_le = train_test_split(
+                X_26_raw, y_encoded, test_size=0.15, random_state=42, stratify=y_encoded
             )
             # Split train_val into train (82.35%) and val (17.65%)
             X_train_70, _, _, _ = train_test_split(
-                X_tr_val_raw, y_tr_val_le, test_size=0.1765, random_state=42, stratify=y_tr_val_le
+                X_tr_val_mlp_raw, y_tr_val_le, test_size=0.1765, random_state=42, stratify=y_tr_val_le
             )
             
-            scaler_mlp.fit(X_train_70)
-            X_test_15_scaled = scaler_mlp.transform(X_test_15_raw)
+            # Impute train_70 and test_15 using train-only medians
+            imputer_mlp = SimpleImputer(strategy="median")
+            X_train_70_imputed = imputer_mlp.fit_transform(X_train_70)
+            X_test_15_mlp_imputed = imputer_mlp.transform(X_test_15_mlp_raw)
+            
+            scaler_mlp.fit(X_train_70_imputed)
+            X_test_15_scaled = scaler_mlp.transform(X_test_15_mlp_imputed)
             
             # Load PyTorch model
             mlp_model = EmotionMLP(input_dim=26, num_classes=len(classes))
@@ -443,7 +436,7 @@ def main():
     print(f"Saved model comparison plot to: {os.path.join(figures_dir, 'review_model_comparison.png')}")
     
     # Plot 2: Confusion Matrices for Top 4 Models
-    top_4_models = ["Stacking Ensemble (Opt)", "Stacking Ensemble (Std)", "LGBM Standalone (Opt)", "LGBM Standalone (Std)"]
+    top_4_models = ["LGBM Optuna Tuned", "Stacking Ensemble (Opt)", "Stacking Ensemble (Std)", "Stack Base - LightGBM"]
     fig, axes = plt.subplots(1, 4, figsize=(20, 4.5))
     for i, name in enumerate(top_4_models):
         if name in confusion_matrices:
@@ -469,16 +462,16 @@ def main():
     
     # Plot 3: Per-class F1-score comparison for LGBM Standalone (Opt) vs Stacking Ensemble (Opt)
     plt.figure(figsize=(10, 5))
-    if "LGBM Standalone (Opt)" in class_f1_scores and "Stacking Ensemble (Opt)" in class_f1_scores:
-        lgb_f1s = class_f1_scores["LGBM Standalone (Opt)"]
+    if "LGBM Optuna Tuned" in class_f1_scores and "Stacking Ensemble (Opt)" in class_f1_scores:
+        lgb_f1s = class_f1_scores["LGBM Optuna Tuned"]
         stack_f1s = class_f1_scores["Stacking Ensemble (Opt)"]
         x_cls = np.arange(len(classes))
-        plt.bar(x_cls - width/2, lgb_f1s, width, label="LGBM Standalone (Optimized)", color="#95a5a6")
+        plt.bar(x_cls - width/2, lgb_f1s, width, label="LGBM Optuna Tuned", color="#3498db")
         plt.bar(x_cls + width/2, stack_f1s, width, label="Stacking Ensemble (Optimized)", color="#2ecc71")
         plt.xticks(x_cls, classes)
         plt.ylabel("F1-Score")
         plt.ylim(0.7, 1.0)
-        plt.title("Per-Class F1-Score Comparison: Standalone vs. Stacking Ensemble")
+        plt.title("Per-Class F1-Score Comparison: Optuna LGBM vs. Stacking Ensemble")
         plt.legend()
         plt.tight_layout()
         plt.savefig(os.path.join(figures_dir, "review_class_f1_comparison.png"), dpi=200, bbox_inches="tight")

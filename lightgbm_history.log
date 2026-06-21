@@ -3,8 +3,3 @@
   Cohen Kappa: 0.85656261
   Params: {"n_estimators": 901, "max_depth": 15, "num_leaves": 67, "learning_rate": 0.1506700962289866, "min_child_samples": 100, "subsample": 0.9296019193435048, "colsample_bytree": 0.6249331910237221, "reg_alpha": 0.00012375810483760454, "reg_lambda": 3.071559832053178e-07}
 --------------------------------------------------------------------------------
-[2026-06-12 13:48:46] Device: cpu
-  Weighted F1: 0.88083849
-  Cohen Kappa: 0.85656261
-  Params: {"n_estimators": 901, "max_depth": 15, "num_leaves": 67, "learning_rate": 0.1506700962289866, "min_child_samples": 100, "subsample": 0.9296019193435048, "colsample_bytree": 0.6249331910237221, "reg_alpha": 0.00012375810483760454, "reg_lambda": 3.071559832053178e-07}
---------------------------------------------------------------------------------

@@ -3,3 +3,14 @@ __pycache__/
 catboost_info/
 .ipynb_checkpoints/
 scratch/
+
+# Large binary model files
+*.joblib
+*.pth
+
+# Dataset (keep in dataset/ but don't commit root copy)
+/all_emotions.csv
+
+# Generated outputs
+figures/
+*.log
