@@ -14,44 +14,47 @@ Speech-Emotion-Recognition/
 │
 ├── figures/                      # Generated performance plots (Confusion matrices, comparisons)
 │
-├── notebooks/                    # All exploratory and baseline Jupyter Notebooks (.ipynb)
-│   ├── checking_csvfile.ipynb
-│   ├── visualize_data.ipynb
-│   ├── random_forest.ipynb
-│   ├── advanced_ml_models.ipynb
-│   ├── ensemble_advanced.ipynb
-│   ├── production_ensemble_pipeline.ipynb
-│   ├── production_ensemble_pipeline_fixed.ipynb
-│   ├── production_optuna_pipeline.ipynb
-│   ├── train_final_ensemble.ipynb
-│   └── train_stacking_ensemble.ipynb
+├── notebooks/                    # Active Jupyter Notebooks (.ipynb)
+│   ├── train_lightgbm.ipynb      # Standalone LightGBM training notebook
+│   └── train_stacking_ensemble.ipynb # Stacking ensemble training notebook
 │
-├── src/                          # All executable Python scripts (.py)
-│   ├── tune_pipeline.py              # Hyperparameter tuning script via Optuna
-│   ├── train_lightgbm.py             # Single LightGBM model training script
-│   ├── train_final_ensemble.py       # Optimally weighted ensemble training script
-│   ├── train_stacking_ensemble.py    # Stacking ensemble classifier training script (best model)
-│   ├── neutral_improve.py            # Model training & threshold moving for neutral class
-│   ├── mlp_baseline.py               # PyTorch Multi-layer Perceptron baseline script
-│   ├── ensemble_advanced.py          # Soft voting ensemble script
-│   └── extracted_ensemble_pipeline.py # Production deployment / inference pipeline script
+├── src/                          # Active Python scripts (.py)
+│   ├── train_lightgbm.py         # Standalone LightGBM model training script
+│   └── review_models.py          # Systematic model performance evaluation script
 │
 ├── models/                       # Saved / serialized model checkpoints
 │   ├── ser_cb_model.joblib
 │   ├── ser_ensemble_encoder.joblib
 │   ├── ser_ensemble_scaler.joblib
+│   ├── ser_ensemble_thresholds.joblib
 │   ├── ser_lgb_model.joblib
+│   ├── ser_lgb_standalone_encoder.joblib
+│   ├── ser_lgb_standalone_imputer.joblib
+│   ├── ser_lgb_standalone_model.joblib
+│   ├── ser_lgb_standalone_scaler.joblib
+│   ├── ser_lgb_standalone_thresholds.joblib
 │   ├── ser_meta_model.joblib
 │   ├── ser_mlp_model.joblib
-│   ├── ser_rf_model.joblib
 │   ├── ser_optuna_encoder.joblib
 │   ├── ser_optuna_lightgbm.joblib
 │   ├── ser_optuna_scaler.joblib
+│   ├── ser_rf_model.joblib
 │   ├── ser_xgb_model.joblib
 │   └── best_mlp_model.pth
 │
+├── best_model/                   # 🏆 Serialized assets for the best-performing model (LGBM Optuna Tuned)
+│   ├── ser_optuna_lightgbm.joblib
+│   ├── ser_optuna_scaler.joblib
+│   └── ser_optuna_encoder.joblib
+│
+├── archive/                      # Historical and legacy files
+│   ├── notebooks/                # Archived baseline/exploratory notebooks
+│   └── src/                      # Archived CLI source scripts
+│
 ├── requirements.txt              # Standard project dependencies
+├── lightgbm_report.txt           # Latest LightGBM training report
 ├── stacking_report.txt           # Latest stacking ensemble validation report
+├── models_review_report.txt      # Comprehensive review report for all checkpoints
 └── .gitignore                    # Local cache ignore rules
 ```
 
@@ -95,23 +98,26 @@ The project progressed from single baseline models to a highly optimized **Stack
 * **Decision Optimization**: Scipy Powell optimizer to calibrate class-specific prediction boundaries.
 
 ### Comparative Performance (Test Set)
-| Model | Weighted F1 | Cohen's Kappa |
-| :--- | :---: | :---: |
-| **Stacking Ensemble (Optimized)** | **0.8745** | **0.8488** |
-| **Stacking Ensemble (Standard)** | 0.8745 | 0.8488 |
-| **LightGBM** | 0.8704 | 0.8439 |
-| **XGBoost** | 0.8632 | 0.8353 |
-| **CatBoost** | 0.8355 | 0.8019 |
-| **MLP Neural Net** | 0.8235 | 0.7876 |
-| **Random Forest Baseline** | 0.7597 | 0.7094 |
+| Model | Weighted F1 | Cohen's Kappa | Split | Status |
+| :--- | :---: | :---: | :---: | :--- |
+| **LGBM Optuna Tuned** | **0.9342** | **0.9209** | 80/20 | **Best Performer** |
+| **LGBM Standalone (Optimized)** | **0.8808** | **0.8566** | 90/10 | **Active Production** |
+| **Stacking Ensemble (Optimized)** | 0.8715 | 0.8453 | 80/20 | Tuned Ensemble |
+| **Stacking Ensemble (Standard)** | 0.8709 | 0.8444 | 80/20 | Ensemble Baseline |
+| **Stack Base - LightGBM** | 0.8677 | 0.8407 | 80/20 | Base Model |
+| **Stack Base - XGBoost** | 0.8632 | 0.8353 | 80/20 | Base Model |
+| **Stack Base - CatBoost** | 0.8317 | 0.7972 | 80/20 | Base Model |
+| **Stack Base - MLP (sklearn)** | 0.8235 | 0.7876 | 80/20 | Base Model |
+| **PyTorch MLP Baseline** | 0.7787 | 0.7331 | 70/15/15 | Deep Learning Baseline |
+| **Stack Base - Random Forest** | 0.7620 | 0.7122 | 80/20 | Base Model |
 
-### Class Breakdown (Optimized Ensemble F1-Scores)
-* **Anger:** `0.94` *(Easiest to classify)*
-* **Sad:** `0.88`
-* **Disgust:** `0.87`
-* **Fear:** `0.87`
-* **Happy:** `0.86`
-* **Neutral:** `0.83` *(Hardest to classify, significantly improved from baseline)*
+### Class Breakdown (LGBM Optuna Tuned F1-Scores)
+* **Anger:** `0.96` *(Easiest to classify)*
+* **Sad:** `0.94`
+* **Fear:** `0.93`
+* **Disgust:** `0.93`
+* **Happy:** `0.92`
+* **Neutral:** `0.91` *(Hardest to classify, highly improved from baseline)*
 
 ---
 
@@ -124,18 +130,19 @@ The project progressed from single baseline models to a highly optimized **Stack
    ```
 
 2. **Explore & Run Jupyter Notebooks (Recommended):**
-   All model training can be executed interactively inside the `notebooks/` folder:
+   Model training can be executed interactively inside the `notebooks/` folder:
    ```bash
-   jupyter notebook notebooks/train_stacking_ensemble.ipynb
+   jupyter notebook notebooks/train_lightgbm.ipynb
    ```
-   Other notebooks include `train_final_ensemble.ipynb` for weighted voting and `production_optuna_pipeline.ipynb` for tuning.
+   Other notebooks include `train_stacking_ensemble.ipynb` for stacking models.
 
-3. **Train the Stacking Ensemble via CLI:**
+3. **Train the Production Model via CLI:**
    ```bash
-   python src/train_stacking_ensemble.py
+   py src/train_lightgbm.py
    ```
 
 4. **Evaluate Saved Models:**
+   Evaluate and compare all serialized model checkpoints on test splits:
    ```bash
-   python src/review_ensemble.py
+   py src/review_models.py
    ```

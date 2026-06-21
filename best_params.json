@@ -8,15 +8,13 @@
         "gamma": 1.8002000545065706e-05
     },
     "lightgbm": {
-        "n_estimators": 901,
-        "max_depth": 15,
-        "num_leaves": 67,
-        "learning_rate": 0.1506700962289866,
-        "min_child_samples": 100,
-        "subsample": 0.9296019193435048,
-        "colsample_bytree": 0.6249331910237221,
-        "reg_alpha": 0.00012375810483760454,
-        "reg_lambda": 3.071559832053178e-07
+        "n_estimators": 1000,
+        "max_depth": 9,
+        "num_leaves": 90,
+        "learning_rate": 0.06267483911556411,
+        "min_child_samples": 69,
+        "subsample": 0.8928486449433802,
+        "colsample_bytree": 0.6720102868255098
     },
     "catboost": {
         "iterations": 473,

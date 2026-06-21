@@ -1,0 +1,163 @@
+================================================================================
+      SPEECH EMOTION RECOGNITION - SYSTEMATIC MODEL PERFORMANCE REVIEW
+================================================================================
+
+=== SUMMARY METRICS TABLE ===
+
+Model Name                   | Split    | Weighted F1 | Cohen Kappa | Accuracy
+--------------------------------------------------------------------------------
+LGBM Optuna Tuned            | 80/20    | 0.934237    | 0.920890    | 0.934110
+Stacking Ensemble (Opt)      | 80/20    | 0.871518    | 0.845307    | 0.871157
+Stacking Ensemble (Std)      | 80/20    | 0.870924    | 0.844444    | 0.870423
+Stack Base - LightGBM        | 80/20    | 0.867739    | 0.840693    | 0.867303
+Stack Base - XGBoost         | 80/20    | 0.863208    | 0.835284    | 0.862806
+Stack Base - CatBoost        | 80/20    | 0.831706    | 0.797181    | 0.831054
+Stack Base - MLP             | 80/20    | 0.823478    | 0.787563    | 0.823071
+PyTorch MLP Baseline         | 70/15/15 | 0.778664    | 0.733072    | 0.777683
+Stack Base - Random Forest   | 80/20    | 0.761957    | 0.712185    | 0.760209
+================================================================================
+
+=== LGBM Optuna Tuned Detailed Classification Report ===
+              precision    recall  f1-score   support
+
+       anger       0.98      0.95      0.96      1863
+     disgust       0.92      0.94      0.93      1863
+        fear       0.93      0.93      0.93      1863
+       happy       0.92      0.92      0.92      1863
+     neutral       0.90      0.93      0.91      1583
+         sad       0.95      0.94      0.94      1862
+
+    accuracy                           0.93     10897
+   macro avg       0.93      0.93      0.93     10897
+weighted avg       0.93      0.93      0.93     10897
+
+--------------------------------------------------------------------------------
+
+=== Stack Base - XGBoost Detailed Classification Report ===
+              precision    recall  f1-score   support
+
+       anger       0.94      0.91      0.93      1863
+     disgust       0.84      0.87      0.86      1863
+        fear       0.87      0.85      0.86      1863
+       happy       0.83      0.86      0.85      1863
+     neutral       0.80      0.83      0.81      1583
+         sad       0.88      0.86      0.87      1862
+
+    accuracy                           0.86     10897
+   macro avg       0.86      0.86      0.86     10897
+weighted avg       0.86      0.86      0.86     10897
+
+--------------------------------------------------------------------------------
+
+=== Stack Base - LightGBM Detailed Classification Report ===
+              precision    recall  f1-score   support
+
+       anger       0.95      0.91      0.93      1863
+     disgust       0.84      0.88      0.86      1863
+        fear       0.86      0.85      0.86      1863
+       happy       0.85      0.86      0.86      1863
+     neutral       0.81      0.84      0.82      1583
+         sad       0.88      0.86      0.87      1862
+
+    accuracy                           0.87     10897
+   macro avg       0.87      0.87      0.87     10897
+weighted avg       0.87      0.87      0.87     10897
+
+--------------------------------------------------------------------------------
+
+=== Stack Base - CatBoost Detailed Classification Report ===
+              precision    recall  f1-score   support
+
+       anger       0.94      0.89      0.91      1863
+     disgust       0.79      0.82      0.81      1863
+        fear       0.82      0.81      0.81      1863
+       happy       0.78      0.80      0.79      1863
+     neutral       0.78      0.83      0.80      1583
+         sad       0.87      0.84      0.86      1862
+
+    accuracy                           0.83     10897
+   macro avg       0.83      0.83      0.83     10897
+weighted avg       0.83      0.83      0.83     10897
+
+--------------------------------------------------------------------------------
+
+=== Stack Base - MLP Detailed Classification Report ===
+              precision    recall  f1-score   support
+
+       anger       0.93      0.89      0.91      1863
+     disgust       0.81      0.79      0.80      1863
+        fear       0.82      0.79      0.80      1863
+       happy       0.77      0.82      0.79      1863
+     neutral       0.78      0.79      0.78      1583
+         sad       0.85      0.86      0.85      1862
+
+    accuracy                           0.82     10897
+   macro avg       0.82      0.82      0.82     10897
+weighted avg       0.82      0.82      0.82     10897
+
+--------------------------------------------------------------------------------
+
+=== Stack Base - Random Forest Detailed Classification Report ===
+              precision    recall  f1-score   support
+
+       anger       0.92      0.85      0.88      1863
+     disgust       0.66      0.72      0.69      1863
+        fear       0.79      0.65      0.71      1863
+       happy       0.65      0.76      0.70      1863
+     neutral       0.73      0.80      0.76      1583
+         sad       0.86      0.78      0.82      1862
+
+    accuracy                           0.76     10897
+   macro avg       0.77      0.76      0.76     10897
+weighted avg       0.77      0.76      0.76     10897
+
+--------------------------------------------------------------------------------
+
+=== Stacking Ensemble (Std) Detailed Classification Report ===
+              precision    recall  f1-score   support
+
+       anger       0.96      0.91      0.93      1863
+     disgust       0.85      0.88      0.86      1863
+        fear       0.87      0.86      0.87      1863
+       happy       0.86      0.86      0.86      1863
+     neutral       0.80      0.85      0.83      1583
+         sad       0.88      0.86      0.87      1862
+
+    accuracy                           0.87     10897
+   macro avg       0.87      0.87      0.87     10897
+weighted avg       0.87      0.87      0.87     10897
+
+--------------------------------------------------------------------------------
+
+=== Stacking Ensemble (Opt) Detailed Classification Report ===
+              precision    recall  f1-score   support
+
+       anger       0.96      0.91      0.93      1863
+     disgust       0.85      0.89      0.86      1863
+        fear       0.86      0.87      0.87      1863
+       happy       0.87      0.84      0.86      1863
+     neutral       0.82      0.84      0.83      1583
+         sad       0.87      0.88      0.87      1862
+
+    accuracy                           0.87     10897
+   macro avg       0.87      0.87      0.87     10897
+weighted avg       0.87      0.87      0.87     10897
+
+--------------------------------------------------------------------------------
+
+=== PyTorch MLP Baseline Detailed Classification Report ===
+              precision    recall  f1-score   support
+
+       anger       0.92      0.86      0.89      1397
+     disgust       0.75      0.71      0.73      1397
+        fear       0.72      0.78      0.75      1398
+       happy       0.70      0.73      0.72      1397
+     neutral       0.75      0.77      0.76      1187
+         sad       0.84      0.80      0.82      1397
+
+    accuracy                           0.78      8173
+   macro avg       0.78      0.78      0.78      8173
+weighted avg       0.78      0.78      0.78      8173
+
+--------------------------------------------------------------------------------
+

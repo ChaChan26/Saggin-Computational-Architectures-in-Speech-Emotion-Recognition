@@ -120,11 +120,11 @@ def main() -> None:
     encoder = LabelEncoder()
     y_encoded = encoder.fit_transform(y)
 
-    # Stratified Train-Test Split (90/10)
+    # Stratified Train-Test Split (80/20)
     X_train, X_test, y_train, y_test = train_test_split(
         X,
         y_encoded,
-        test_size=0.10,
+        test_size=0.20,
         random_state=RANDOM_STATE,
         stratify=y_encoded,
     )
@@ -207,20 +207,20 @@ def main() -> None:
 
     # Save Trained Model, Preprocessors, and Encoder
     print("\n--- Serializing production artifacts for standalone LightGBM model ---")
-    models_dir = os.path.join(project_root, 'models')
-    os.makedirs(models_dir, exist_ok=True)
+    best_model_dir = os.path.join(project_root, 'best_model')
+    os.makedirs(best_model_dir, exist_ok=True)
 
     saved_files = []
     def save_asset(obj, name):
-        path = os.path.join(models_dir, name)
+        path = os.path.join(best_model_dir, name)
         joblib.dump(obj, path)
         size_mb = os.path.getsize(path) / (1024 * 1024)
         saved_files.append(f"  - {name} ({size_mb:.2f} MB)")
 
-    save_asset(model,   'ser_lgb_standalone_model.joblib')
-    save_asset(imputer, 'ser_lgb_standalone_imputer.joblib')
-    save_asset(scaler,  'ser_lgb_standalone_scaler.joblib')
-    save_asset(encoder, 'ser_lgb_standalone_encoder.joblib')
+    save_asset(model,   'ser_optuna_lightgbm.joblib')
+    save_asset(imputer, 'ser_optuna_imputer.joblib')
+    save_asset(scaler,  'ser_optuna_scaler.joblib')
+    save_asset(encoder, 'ser_optuna_encoder.joblib')
 
     for f_saved in saved_files:
         print(f_saved)
