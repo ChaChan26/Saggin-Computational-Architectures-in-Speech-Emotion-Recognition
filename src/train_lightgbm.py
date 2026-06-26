@@ -155,8 +155,8 @@ def main() -> None:
     )
     global_weight_dict = dict(zip(unique_classes, global_weights))
 
-    # Build LightGBM classifier (with Try-Except fallback for GPU support)
-    device_type = "gpu"
+    # Build LightGBM classifier
+    device_type = "cpu"
     try:
         model = lgb.LGBMClassifier(
             **lgb_params,
@@ -225,7 +225,7 @@ def main() -> None:
         print(f_saved)
 
     # Save Standalone Performance Report
-    report_path = os.path.join(project_root, 'lightgbm_report.txt')
+    report_path = os.path.join(project_root, 'lightgbm_standalone_report.txt')
     with open(report_path, 'w') as f:
         f.write('=== Speech Emotion Recognition Standalone LightGBM Training Report ===\n\n')
         f.write('=== LightGBM Weighted F1 ===\n')

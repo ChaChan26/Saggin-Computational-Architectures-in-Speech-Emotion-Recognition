@@ -45,6 +45,7 @@ Speech-Emotion-Recognition/
 ├── best_model/                   # 🏆 Serialized assets for the best-performing model (LGBM Optuna Tuned)
 │   ├── README.md                 # Model card with metrics, usage, and code snippet
 │   ├── ser_optuna_lightgbm.joblib
+│   ├── ser_optuna_imputer.joblib
 │   ├── ser_optuna_scaler.joblib
 │   └── ser_optuna_encoder.joblib
 │
@@ -95,10 +96,10 @@ The project progressed from single baseline models to a highly optimized **Stack
 ### Comparative Performance (Test Set)
 | Model | Weighted F1 | Cohen's Kappa | Split | Status |
 | :--- | :---: | :---: | :---: | :--- |
-| **LGBM Optuna Tuned** | **0.9342** | **0.9209** | 80/20 | **Best Performer** |
-| **LGBM Standalone (Optimized)** | **0.8808** | **0.8566** | 90/10 | **Active Production** |
+| **LGBM Standalone (Optimized)** | **0.8813** | **0.8572** | 90/10 | **Best Performer** |
 | **Stacking Ensemble (Optimized)** | 0.8715 | 0.8453 | 80/20 | Tuned Ensemble |
 | **Stacking Ensemble (Standard)** | 0.8709 | 0.8444 | 80/20 | Ensemble Baseline |
+| **LGBM Optuna Tuned** | 0.8700 | 0.8434 | 80/20 | Standalone Baseline (80/20) |
 | **Stack Base - LightGBM** | 0.8677 | 0.8407 | 80/20 | Base Model |
 | **Stack Base - XGBoost** | 0.8632 | 0.8353 | 80/20 | Base Model |
 | **Stack Base - CatBoost** | 0.8317 | 0.7972 | 80/20 | Base Model |
@@ -107,12 +108,12 @@ The project progressed from single baseline models to a highly optimized **Stack
 | **Stack Base - Random Forest** | 0.7620 | 0.7122 | 80/20 | Base Model |
 
 ### Class Breakdown (LGBM Optuna Tuned F1-Scores)
-* **Anger:** `0.96` *(Easiest to classify)*
-* **Sad:** `0.94`
-* **Fear:** `0.93`
-* **Disgust:** `0.93`
-* **Happy:** `0.92`
-* **Neutral:** `0.91` *(Hardest to classify, highly improved from baseline)*
+* **Anger:** `0.93` *(Easiest to classify)*
+* **Sad:** `0.87`
+* **Disgust:** `0.87`
+* **Fear:** `0.86`
+* **Happy:** `0.86`
+* **Neutral:** `0.83` *(Significantly improved from deep learning baseline of 0.76)*
 
 ---
 

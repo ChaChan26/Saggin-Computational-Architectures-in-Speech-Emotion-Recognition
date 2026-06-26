@@ -163,6 +163,8 @@ def main():
         lgb_standalone_thresholds = joblib.load(os.path.join(models_dir, "ser_lgb_standalone_thresholds.joblib"))
         
         # Use the saved imputer and scaler on the raw 90/10 test split
+        if not hasattr(lgb_standalone_imputer, '_fill_dtype'):
+            lgb_standalone_imputer._fill_dtype = lgb_standalone_imputer.statistics_.dtype
         X_test_90_imputed = lgb_standalone_imputer.transform(X_test_90_raw)
         X_test_90_scaled = lgb_standalone_scaler.transform(X_test_90_imputed)
         

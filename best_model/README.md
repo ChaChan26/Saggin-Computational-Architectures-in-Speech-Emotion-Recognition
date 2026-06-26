@@ -3,28 +3,27 @@
 This directory contains the serialized assets for the absolute best-performing Speech Emotion Recognition model checkpoint found in this workspace (**LGBM Optuna Tuned**).
 
 ## Performance Metrics (Test Set)
-* **Weighted F1-Score:** `0.934237` (93.42%)
-* **Cohen's Kappa:** `0.920890` (92.09%)
-* **Overall Accuracy:** `0.934110` (93.41%)
+* **Weighted F1-Score:** `0.869979` (87.00%)
+* **Cohen's Kappa:** `0.843445` (84.34%)
+* **Overall Accuracy:** `0.869597` (86.96%)
 
 ### Class-Specific F1-Scores
-* **Anger:** `0.96` *(Easiest to classify)*
-* **Sad:** `0.94`
-* **Fear:** `0.93`
-* **Disgust:** `0.93`
-* **Happy:** `0.92`
-* **Neutral:** `0.91` *(Highly improved from baselines)*
+* **Anger:** `0.93` *(Easiest to classify)*
+* **Sad:** `0.87`
+* **Disgust:** `0.87`
+* **Fear:** `0.86`
+* **Happy:** `0.86`
+* **Neutral:** `0.83` *(Significantly improved from deep learning MLP baseline of 0.76)*
 
 ---
 
 ## File Contents
 1. `ser_optuna_lightgbm.joblib`: Serialized LightGBM classifier checkpoint.
-2. `ser_optuna_scaler.joblib`: StandardScaler fitted on 48 features of the training set.
-3. `ser_optuna_encoder.joblib`: LabelEncoder mapping string categories back to indices.
+2. `ser_optuna_imputer.joblib`: SimpleImputer (strategy="median") fitted on 48 features.
+3. `ser_optuna_scaler.joblib`: StandardScaler fitted on 48 features of the training set.
+4. `ser_optuna_encoder.joblib`: LabelEncoder mapping string categories back to indices.
 
-> **Note:** The imputer used during training was not serialized with this checkpoint.
-> If your input data contains NaN or infinite values, you must handle them before scaling.
-> The training pipeline used `SimpleImputer(strategy="median")` fitted on the training split.
+> **Note:** The imputer is now serialized and included with this checkpoint, making predictions safer and more robust to missing values or infinities.
 
 ---
 
@@ -37,17 +36,16 @@ import numpy as np
 
 # Load assets
 model = joblib.load("ser_optuna_lightgbm.joblib")
+imputer = joblib.load("ser_optuna_imputer.joblib")
 scaler = joblib.load("ser_optuna_scaler.joblib")
 encoder = joblib.load("ser_optuna_encoder.joblib")
 
 # Example input: 48 acoustic features (1 sample)
 dummy_features = np.random.randn(1, 48)
 
-# Handle any NaN/inf values (imputer was not saved with this checkpoint)
-dummy_features = np.nan_to_num(dummy_features, nan=0.0, posinf=0.0, neginf=0.0)
-
 # Preprocess and run prediction
-scaled_features = scaler.transform(dummy_features)
+imputed_features = imputer.transform(dummy_features)
+scaled_features = scaler.transform(imputed_features)
 prediction_idx = model.predict(scaled_features)[0]
 
 # Decode label to string

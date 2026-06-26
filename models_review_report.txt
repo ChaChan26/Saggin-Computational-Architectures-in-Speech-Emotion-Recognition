@@ -6,9 +6,11 @@
 
 Model Name                   | Split    | Weighted F1 | Cohen Kappa | Accuracy
 --------------------------------------------------------------------------------
-LGBM Optuna Tuned            | 80/20    | 0.934237    | 0.920890    | 0.934110
+LGBM Standalone (Opt)        | 90/10    | 0.881250    | 0.857222    | 0.881079
+LGBM Standalone (Std)        | 90/10    | 0.880838    | 0.856563    | 0.880529
 Stacking Ensemble (Opt)      | 80/20    | 0.871518    | 0.845307    | 0.871157
 Stacking Ensemble (Std)      | 80/20    | 0.870924    | 0.844444    | 0.870423
+LGBM Optuna Tuned            | 80/20    | 0.869979    | 0.843445    | 0.869597
 Stack Base - LightGBM        | 80/20    | 0.867739    | 0.840693    | 0.867303
 Stack Base - XGBoost         | 80/20    | 0.863208    | 0.835284    | 0.862806
 Stack Base - CatBoost        | 80/20    | 0.831706    | 0.797181    | 0.831054
@@ -17,19 +19,51 @@ PyTorch MLP Baseline         | 70/15/15 | 0.778664    | 0.733072    | 0.777683
 Stack Base - Random Forest   | 80/20    | 0.761957    | 0.712185    | 0.760209
 ================================================================================
 
+=== LGBM Standalone (Std) Detailed Classification Report ===
+              precision    recall  f1-score   support
+
+       anger       0.95      0.91      0.93       932
+     disgust       0.85      0.90      0.88       931
+        fear       0.89      0.88      0.89       932
+       happy       0.87      0.86      0.87       932
+     neutral       0.82      0.85      0.83       791
+         sad       0.90      0.87      0.88       931
+
+    accuracy                           0.88      5449
+   macro avg       0.88      0.88      0.88      5449
+weighted avg       0.88      0.88      0.88      5449
+
+--------------------------------------------------------------------------------
+
+=== LGBM Standalone (Opt) Detailed Classification Report ===
+              precision    recall  f1-score   support
+
+       anger       0.94      0.93      0.93       932
+     disgust       0.86      0.90      0.88       931
+        fear       0.88      0.88      0.88       932
+       happy       0.88      0.85      0.87       932
+     neutral       0.82      0.85      0.83       791
+         sad       0.90      0.87      0.88       931
+
+    accuracy                           0.88      5449
+   macro avg       0.88      0.88      0.88      5449
+weighted avg       0.88      0.88      0.88      5449
+
+--------------------------------------------------------------------------------
+
 === LGBM Optuna Tuned Detailed Classification Report ===
               precision    recall  f1-score   support
 
-       anger       0.98      0.95      0.96      1863
-     disgust       0.92      0.94      0.93      1863
-        fear       0.93      0.93      0.93      1863
-       happy       0.92      0.92      0.92      1863
-     neutral       0.90      0.93      0.91      1583
-         sad       0.95      0.94      0.94      1862
+       anger       0.95      0.91      0.93      1863
+     disgust       0.86      0.88      0.87      1863
+        fear       0.86      0.87      0.86      1863
+       happy       0.85      0.86      0.86      1863
+     neutral       0.81      0.85      0.83      1583
+         sad       0.89      0.86      0.87      1862
 
-    accuracy                           0.93     10897
-   macro avg       0.93      0.93      0.93     10897
-weighted avg       0.93      0.93      0.93     10897
+    accuracy                           0.87     10897
+   macro avg       0.87      0.87      0.87     10897
+weighted avg       0.87      0.87      0.87     10897
 
 --------------------------------------------------------------------------------
 
