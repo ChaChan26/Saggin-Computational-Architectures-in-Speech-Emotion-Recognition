@@ -213,21 +213,46 @@ def main():
         optuna_model_path = os.path.join(best_model_dir, "ser_optuna_lightgbm.joblib") if os.path.exists(os.path.join(best_model_dir, "ser_optuna_lightgbm.joblib")) else os.path.join(models_dir, "ser_optuna_lightgbm.joblib")
         optuna_scaler_path = os.path.join(best_model_dir, "ser_optuna_scaler.joblib") if os.path.exists(os.path.join(best_model_dir, "ser_optuna_scaler.joblib")) else os.path.join(models_dir, "ser_optuna_scaler.joblib")
         optuna_encoder_path = os.path.join(best_model_dir, "ser_optuna_encoder.joblib") if os.path.exists(os.path.join(best_model_dir, "ser_optuna_encoder.joblib")) else os.path.join(models_dir, "ser_optuna_encoder.joblib")
+        optuna_imputer_path = os.path.join(best_model_dir, "ser_optuna_imputer.joblib") if os.path.exists(os.path.join(best_model_dir, "ser_optuna_imputer.joblib")) else os.path.join(models_dir, "ser_optuna_imputer.joblib")
         
         optuna_model = joblib.load(optuna_model_path)
         optuna_scaler = joblib.load(optuna_scaler_path)
         optuna_encoder = joblib.load(optuna_encoder_path)
+        optuna_imputer = joblib.load(optuna_imputer_path)
         
+        # Patch SimpleImputer version incompatibility if needed
+        if not hasattr(optuna_imputer, '_fill_dtype'):
+            optuna_imputer._fill_dtype = optuna_imputer.statistics_.dtype
+            
         # Optuna LGBM preprocessed test data (on 80/20 split)
-        # Impute test data using train-only imputer, then scale with saved scaler
-        X_test_80_imputed = imputer_80.transform(X_test_80_raw)
-        X_test_80_scaled = optuna_scaler.transform(X_test_80_imputed)
+        # Use the saved imputer and scaler on the raw 80/20 test split
+        X_test_80_imputed = optuna_imputer.transform(X_test_80_raw)
         
-        optuna_pred = optuna_model.predict(X_test_80_scaled)
-        if isinstance(optuna_pred[0], str):
-            optuna_pred_encoded = optuna_encoder.transform(optuna_pred)
+        # Check if the loaded model has feature engineering (expecting more than 48 features)
+        n_features = getattr(optuna_model, 'n_features_in_', 48)
+        if n_features > 48:
+            # Import feature engineering helper dynamically to avoid global dependency issues
+            import sys
+            sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+            from feature_engineering import engineer_features
+            X_test_80_fe = engineer_features(X_test_80_imputed)
+            X_test_80_scaled = optuna_scaler.transform(X_test_80_fe)
         else:
-            optuna_pred_encoded = optuna_pred
+            X_test_80_scaled = optuna_scaler.transform(X_test_80_imputed)
+        
+        # Check if optimized thresholds exist
+        thresholds_path = os.path.join(best_model_dir, "ser_optuna_thresholds.joblib")
+        if os.path.exists(thresholds_path):
+            optuna_thresholds = joblib.load(thresholds_path)
+            optuna_proba = optuna_model.predict_proba(X_test_80_scaled)
+            optuna_pred_encoded = np.argmax(optuna_proba * optuna_thresholds, axis=1)
+            print("Using optimized thresholds for LGBM Optuna Tuned prediction.")
+        else:
+            optuna_pred = optuna_model.predict(X_test_80_scaled)
+            if isinstance(optuna_pred[0], str):
+                optuna_pred_encoded = optuna_encoder.transform(optuna_pred)
+            else:
+                optuna_pred_encoded = optuna_pred
             
         optuna_f1 = f1_score(y_test_80, optuna_pred_encoded, average="weighted")
         optuna_kappa = cohen_kappa_score(y_test_80, optuna_pred_encoded)
