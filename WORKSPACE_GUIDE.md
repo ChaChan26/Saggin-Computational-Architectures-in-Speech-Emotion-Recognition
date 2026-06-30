@@ -10,18 +10,22 @@ These files represent the current optimized machine learning pipeline and its se
 | File / Folder Path | Type | Status | Description |
 | :--- | :---: | :---: | :--- |
 | 📁 [**`src/`**](file:///c:/Users/User/Downloads/Saggin-Computational-Architectures-in-Speech-Emotion-Recognition/src/) | Directory | **Active** | Core source code directory. |
-| ├── [**`train_lightgbm.py`**](file:///c:/Users/User/Downloads/Saggin-Computational-Architectures-in-Speech-Emotion-Recognition/src/train_lightgbm.py) | Python Script | **Active (Trained)** | Command-line script to train the standalone LightGBM model on a 90/10 split. Trains in < 6 seconds. |
+| ├── [**`train_lightgbm.py`**](file:///c:/Users/User/Downloads/Saggin-Computational-Architectures-in-Speech-Emotion-Recognition/src/train_lightgbm.py) | Python Script | **Active (Trained)** | Command-line script to train the Optuna Tuned LightGBM model on an 80/20 split. Trains in < 6 seconds. |
+| ├── [**`review_models.py`**](file:///c:/Users/User/Downloads/Saggin-Computational-Architectures-in-Speech-Emotion-Recognition/src/review_models.py) | Python Script | **Active** | Command-line script to run systematic evaluation of all serialized model checkpoints. |
 | 📁 [**`notebooks/`**](file:///c:/Users/User/Downloads/Saggin-Computational-Architectures-in-Speech-Emotion-Recognition/notebooks/) | Directory | **Active** | Interactive Jupyter notebooks directory. |
-| ├── [**`train_lightgbm.ipynb`**](file:///c:/Users/User/Downloads/Saggin-Computational-Architectures-in-Speech-Emotion-Recognition/notebooks/train_lightgbm.ipynb) | Notebook | **Active (Trained)** | Interactive version of the standalone LightGBM pipeline with markdown guides and inline plots. |
-| 📁 [**`models/`**](file:///c:/Users/User/Downloads/Saggin-Computational-Architectures-in-Speech-Emotion-Recognition/models/) | Directory | **Active (Output)** | Serialized pipeline artifacts for backend API deployment. |
-| ├── `ser_lgb_standalone_model.joblib` | Binary Asset | **Trained** | Serialized LightGBM classifier. |
-| ├── `ser_lgb_standalone_imputer.joblib` | Binary Asset | **Fitted** | Median feature imputer. |
-| ├── `ser_lgb_standalone_scaler.joblib` | Binary Asset | **Fitted** | Standard scaler. |
-| ├── `ser_lgb_standalone_encoder.joblib` | Binary Asset | **Fitted** | Target label encoder. |
+| ├── [**`train_lightgbm.ipynb`**](file:///c:/Users/User/Downloads/Saggin-Computational-Architectures-in-Speech-Emotion-Recognition/notebooks/train_lightgbm.ipynb) | Notebook | **Active (Trained)** | Interactive version of the Optuna Tuned LightGBM pipeline with markdown guides and inline plots. |
+| ├── [**`train_stacking_ensemble.ipynb`**](file:///c:/Users/User/Downloads/Saggin-Computational-Architectures-in-Speech-Emotion-Recognition/notebooks/train_stacking_ensemble.ipynb) | Notebook | **Active (Trained)** | Interactive version of the Stacking Ensemble model training. |
+| 📁 [**`best_model/`**](file:///c:/Users/User/Downloads/Saggin-Computational-Architectures-in-Speech-Emotion-Recognition/best_model/) | Directory | **Active (Output)** | Serialized best model assets (LGBM Optuna Tuned on 80/20 split). |
+| ├── `ser_optuna_lightgbm.joblib` | Binary Asset | **Trained** | Serialized LightGBM classifier checkpoint. |
+| ├── `ser_optuna_imputer.joblib` | Binary Asset | **Fitted** | Median feature imputer. |
+| ├── `ser_optuna_scaler.joblib` | Binary Asset | **Fitted** | Standard scaler. |
+| ├── `ser_optuna_encoder.joblib` | Binary Asset | **Fitted** | Target label encoder. |
+| 📁 [**`models/`**](file:///c:/Users/User/Downloads/Saggin-Computational-Architectures-in-Speech-Emotion-Recognition/models/) | Directory | **Active (Output)** | Serialized pipeline artifacts for other standalone and ensemble models. |
 | 📁 [**`figures/`**](file:///c:/Users/User/Downloads/Saggin-Computational-Architectures-in-Speech-Emotion-Recognition/figures/) | Directory | **Active (Output)** | Output visualizations. |
 | ├── `lightgbm_confusion.png` | Heatmap | **Generated** | Test set confusion matrix showing true vs. predicted emotion distributions. |
 | ├── `lightgbm_class_f1.png` | Bar Chart | **Generated** | F1-scores broken down by class. |
-| 📄 [**`lightgbm_report.txt`**](file:///c:/Users/User/Downloads/Saggin-Computational-Architectures-in-Speech-Emotion-Recognition/lightgbm_report.txt) | Text File | **Active (Output)** | Metrics log for the latest training run (F1-score: `0.8768`). |
+| 📄 [**`lightgbm_standalone_report.txt`**](file:///c:/Users/User/Downloads/Saggin-Computational-Architectures-in-Speech-Emotion-Recognition/lightgbm_standalone_report.txt) | Text File | **Active (Output)** | Metrics log for the latest standalone training run (F1-score: `0.8700`). |
+| 📄 [**`models_review_report.txt`**](file:///c:/Users/User/Downloads/Saggin-Computational-Architectures-in-Speech-Emotion-Recognition/models_review_report.txt) | Text File | **Active (Output)** | Systemic performance evaluation report across all models. |
 | 📄 [**`best_params.json`**](file:///c:/Users/User/Downloads/Saggin-Computational-Architectures-in-Speech-Emotion-Recognition/best_params.json) | JSON File | **Active (Config)** | Optimal hyperparameters used for model configurations. |
 | 📁 `dataset/` | Directory | **Active (Data)** | Contains raw dataset `all_emotions.csv` with 48 acoustic features. |
 | 📄 `requirements.txt` | Config File | **Active** | List of Python dependencies (lightgbm, scikit-learn, joblib, seaborn, torch). |
