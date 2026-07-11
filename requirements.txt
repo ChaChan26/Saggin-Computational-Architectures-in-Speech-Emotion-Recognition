@@ -10,3 +10,6 @@ lightgbm>=3.3.0
 catboost>=1.0.0
 torch>=1.10.0
 ipython
+transformers>=4.15.0
+librosa>=0.8.1
+soundfile>=0.10.0

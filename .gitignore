@@ -14,3 +14,9 @@ scratch/
 # Generated outputs
 figures/
 *.log
+
+# Latency optimization files
+src/predict_latency_optimized.py
+src/test_inference_latency.py
+.agents/
+
