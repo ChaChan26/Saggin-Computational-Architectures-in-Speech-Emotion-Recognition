@@ -13,12 +13,19 @@ class FeatureCache:
     """
     def __init__(self, decimals: int = 4):
         self.decimals = decimals
-        self.cache: Dict[Tuple[float, ...], Tuple[str, np.ndarray]] = {}
-        self.keys_fifo: List[Tuple[float, ...]] = []
+        # Keys can contain strings ('NaN'), floats (rounded), or infs
+        self.cache: Dict[Tuple[Any, ...], Tuple[str, np.ndarray]] = {}
+        self.keys_fifo: List[Tuple[Any, ...]] = []
 
-    def _make_key(self, features: np.ndarray) -> Tuple[float, ...]:
-        feat_flat = np.nan_to_num(features.flatten(), nan=0.0, posinf=9999.0, neginf=-9999.0)
-        return tuple(np.round(feat_flat, self.decimals).tolist())
+    def _make_key(self, features: np.ndarray) -> Tuple[Any, ...]:
+        feat_flat = features.flatten()
+        return tuple(
+            'NaN' if np.isnan(x) else
+            float('inf') if np.isposinf(x) else
+            float('-inf') if np.isneginf(x) else
+            round(float(x), self.decimals)
+            for x in feat_flat
+        )
 
     def get(self, features: np.ndarray) -> Optional[Tuple[str, np.ndarray, float]]:
         """
@@ -87,6 +94,10 @@ class ParallelPredictor:
         # Run concurrently
         await asyncio.gather(*tasks.values())
         return {name: task.result() for name, task in tasks.items()}
+
+    def close(self):
+        """Shutdown the thread pool executor to prevent memory/thread leaks."""
+        self.executor.shutdown(wait=True)
 
 class LatencyOptimizedInference:
     """
@@ -188,7 +199,12 @@ class LatencyOptimizedInference:
         X_ens_scaled = self.ensemble_scaler.transform(X_imputed)
         parallel_results = await self.parallel_predictor.predict_all_parallel(X_ens_scaled)
         
-        if not parallel_results:
+        # Extract individual model probabilities
+        lgb_proba = parallel_results.get("lgb")
+        xgb_proba = parallel_results.get("xgb")
+        
+        # Safety fallback if either model prediction failed to return
+        if lgb_proba is None or xgb_proba is None:
             elapsed = time.perf_counter() - start
             self.cache.set(X_raw, label, proba)
             return {
@@ -199,9 +215,8 @@ class LatencyOptimizedInference:
                 "method": "parallel_fallback_failed"
             }
             
-        # Extract individual model probabilities
-        lgb_proba = np.atleast_2d(parallel_results.get("lgb"))[0]
-        xgb_proba = np.atleast_2d(parallel_results.get("xgb"))[0]
+        lgb_proba = np.atleast_2d(lgb_proba)[0]
+        xgb_proba = np.atleast_2d(xgb_proba)[0]
         
         # Simple average ensemble prediction
         ensemble_proba = (lgb_proba + xgb_proba) / 2.0
@@ -219,3 +234,7 @@ class LatencyOptimizedInference:
             "cache_hit": False,
             "method": "parallel_fallback_ensemble"
         }
+
+    def close(self):
+        """Shutdown the underlying parallel executor to prevent resource leaks."""
+        self.parallel_predictor.close()
