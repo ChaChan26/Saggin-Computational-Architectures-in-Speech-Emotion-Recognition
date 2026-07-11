@@ -23,7 +23,9 @@
 * To evaluate checkpoints: Execute `py src/review_models.py`.
 
 ## Latency Optimization Guidelines
-1. **Numerical Feature Caching:** When performing high-frequency emotion inference on features, cache numerical feature arrays. Use vector-based matching (e.g. Euclidean distance or high Cosine Similarity) to return predictions instantly.
-2. **Intent/Confidence Routing:** If the standalone LightGBM model outputs a classification confidence above 0.85, return the prediction immediately. If confidence is low, fall back to heavy ensemble prediction.
-3. **Parallel Base Model Execution:** When generating predictions or out-of-fold stacking features using multiple sklearn/joblib/PyTorch models, execute their predictions concurrently using `concurrent.futures.ThreadPoolExecutor` and `asyncio` to release the Python GIL and run them in parallel on multiple threads.
+1. **Numerical Feature Caching:** The inference wrapper uses an $O(1)$ dictionary-based cache with rounded feature tuples. NaN values are mapped to a `'NaN'` string sentinel to prevent key collisions with valid `0.0` measurements.
+2. **Single-Model Inference:** The pipeline uses a single standalone Optuna-tuned LightGBM model (<2 ms latency). Fallback ensembles have been removed. Do not re-introduce concurrent base model execution unless the accuracy gain exceeds +1% F1.
 
+## Development Log Rule
+* **DEVLOG.md:** A persistent development journal exists at [DEVLOG.md](file:///c:/Emotion/Saggin-Computational-Architectures-in-Speech-Emotion-Recognition/DEVLOG.md).
+* **Rule:** At the end of every coding session that produces a Git commit, append a new entry to `DEVLOG.md` above the `<!-- NEXT ENTRY GOES HERE -->` marker. Use the format: `## [YYYY-MM-DD] — commit hash — One-line summary`, followed by a brief description of what changed and why.
