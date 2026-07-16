@@ -89,4 +89,11 @@ Optimized FeatureCache with vectorized NumPy key generation (reducing key gen ti
 
 ---
 
+## [2026-07-16] — `9523f0a` — Rewrite Git history to remove other contributor
+
+Rewrote repository history to replace all commits authored by the generic `User <user@example.com>` contributor (which mapped to a contributor named Luong Chi Dung on GitHub) with the local Git identity `ChaChan26 <minhharry2006@gmail.com>`.
+
+---
+
 <!-- NEXT ENTRY GOES HERE -->
+
