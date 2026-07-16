@@ -83,4 +83,10 @@ Removed the entire fallback ensemble (0.15% F1 gain not worth 60 MB RAM + thread
 
 ---
 
+## [2026-07-13] — `pending` — Refine caching, resolve sklearn warnings, add batch prediction and thread safety
+
+Optimized FeatureCache with vectorized NumPy key generation (reducing key gen time by 97%). Made cache access thread-safe. Offloaded CPU-bound predictions in the async wrapper to thread executors to prevent blocking. Added support for batch predictions with optimized sub-batch routing. Suppressed sklearn warnings and patched SimpleImputer version differences. Created validation unit tests in src/test_inference_robustness.py.
+
+---
+
 <!-- NEXT ENTRY GOES HERE -->

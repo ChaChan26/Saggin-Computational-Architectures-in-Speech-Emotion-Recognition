@@ -23,3 +23,8 @@
   Cohen Kappa: 0.84344515
   Params: {"n_estimators": 1000, "max_depth": 9, "num_leaves": 90, "learning_rate": 0.06267483911556411, "min_child_samples": 69, "subsample": 0.8928486449433802, "colsample_bytree": 0.6720102868255098}
 --------------------------------------------------------------------------------
+[2026-07-13 13:47:50] Device: cpu
+  Weighted F1: 0.86997900
+  Cohen Kappa: 0.84344515
+  Params: {"n_estimators": 1000, "max_depth": 9, "num_leaves": 90, "learning_rate": 0.06267483911556411, "min_child_samples": 69, "subsample": 0.8928486449433802, "colsample_bytree": 0.6720102868255098}
+--------------------------------------------------------------------------------

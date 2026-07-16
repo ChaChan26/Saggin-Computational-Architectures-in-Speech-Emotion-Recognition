@@ -2,7 +2,6 @@ import os
 import sys
 import pandas as pd
 import numpy as np
-import asyncio
 from sklearn.metrics import classification_report, f1_score, cohen_kappa_score
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder
@@ -26,22 +25,17 @@ def resolve_csv_path(base_dir: str) -> str:
             return path
     raise FileNotFoundError(f"Could not find all_emotions.csv. Searched in: {search_paths}")
 
-async def evaluate_threshold(pipeline, X_test, y_test, threshold, encoder):
+def evaluate_threshold(pipeline, X_test, y_test, threshold, encoder):
     start = time.perf_counter()
-    y_pred = []
-    method_counts = {}
     
-    # Process in batches to avoid overwhelming the thread pool or asyncio loop
-    batch_size = 500
-    for i in range(0, len(X_test), batch_size):
-        batch = X_test[i:i+batch_size]
-        tasks = [pipeline.predict_optimized(row.reshape(1, -1), confidence_threshold=threshold) for row in batch]
-        results = await asyncio.gather(*tasks)
-        y_pred.extend([res['label'] for res in results])
-        
-        for res in results:
-            method = res.get('method', 'unknown')
-            method_counts[method] = method_counts.get(method, 0) + 1
+    # Run the entire batch at once, utilizing vectorized preprocessing and LightGBM!
+    results = pipeline.predict(X_test, confidence_threshold=threshold)
+    
+    y_pred = [res['label'] for res in results]
+    method_counts = {}
+    for res in results:
+        method = res.get('method', 'unknown')
+        method_counts[method] = method_counts.get(method, 0) + 1
             
     elapsed = time.perf_counter() - start
     
@@ -52,7 +46,7 @@ async def evaluate_threshold(pipeline, X_test, y_test, threshold, encoder):
     kappa = cohen_kappa_score(y_test, y_pred_encoded)
     
     print(f"\n--- Threshold: {threshold} ---")
-    print(f"Elapsed Time: {elapsed:.2f}s for {len(X_test)} samples")
+    print(f"Elapsed Time: {elapsed:.4f}s for {len(X_test)} samples ({(elapsed*1000/len(X_test)):.4f} ms/sample)")
     print(f"Weighted F1: {f1:.6f}")
     print(f"Cohen Kappa: {kappa:.6f}")
     print("Method Breakdown:")
@@ -61,7 +55,7 @@ async def evaluate_threshold(pipeline, X_test, y_test, threshold, encoder):
     
     return f1, kappa, threshold
 
-async def main():
+def main():
     print("Initializing Confidence-Routed Hybrid Pipeline...")
     pipeline = LatencyOptimizedInference(project_root)
     
@@ -96,7 +90,8 @@ async def main():
     
     for th in thresholds:
         pipeline.cache.cache.clear()
-        f1, kappa, t = await evaluate_threshold(pipeline, X_test, y_test, th, encoder)
+        pipeline.cache.keys_fifo.clear()
+        f1, kappa, t = evaluate_threshold(pipeline, X_test, y_test, th, encoder)
         if f1 > best_f1:
             best_f1 = f1
             best_thresh = t
@@ -110,4 +105,4 @@ async def main():
     print("=" * 50)
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    main()
